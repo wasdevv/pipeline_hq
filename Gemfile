@@ -31,6 +31,9 @@ gem "rqrcode"            # QR code para enroll do 2FA
 # === Safety nets ===
 gem "strong_migrations"  # bloqueia migrations inseguras
 
+# === UI components ===
+gem "view_component"     # componentes UI reutilizáveis (R3)
+
 # === Money ===
 gem "money-rails"        # money types em colunas *_cents
 

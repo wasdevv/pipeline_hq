@@ -1,0 +1,6 @@
+Olá <%= @user.name %>,
+
+Confirme seu email no PipelineHQ:
+<%= confirmation_url(token: @token) %>
+
+O link expira em 24 horas.

@@ -1,24 +1,113 @@
-# README
+# PipelineHQ
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+PipelineHQ é um CRM B2B multi-tenant em Rails 8.1.3 — pipeline de vendas no estilo Pipedrive/HubSpot, construído como projeto de portfólio sênior. O foco é mostrar Rails 8 moderno (Solid Queue/Cache/Cable, Hotwire, Tailwind v4, auth nativa) usado com decisões deliberadas e segurança real, não receita pronta.
 
-Things you may want to cover:
+O projeto existe pra responder uma pergunta concreta em entrevista: "como você arquiteta um SaaS em Rails 8 hoje?". Cada decisão tem um ADR em `docs/adr/`, cada camada de auth é um capítulo demonstrável, e tudo roda em Postgres — sem Redis, sem Sidekiq, sem Devise.
 
-* Ruby version
+![Ruby 4.0.5](https://img.shields.io/badge/ruby-4.0.5-CC342D)
+![Rails 8.1.3](https://img.shields.io/badge/rails-8.1.3-CC0000)
+![License MIT](https://img.shields.io/badge/license-MIT-green)
 
-* System dependencies
+## Status
 
-* Configuration
+Em construção (junho/2026). Auth completa com 10 camadas de hardening; CRM em fase scaffold (Account, Contact, Stage, Deal, Activity gerados, relacionamentos pendentes).
 
-* Database creation
+## Stack
 
-* Database initialization
+- Ruby 4.0.5 (via rbenv)
+- Rails 8.1.3
+- PostgreSQL (host único, sem extensões além das default)
+- Tailwind CSS v4 via `tailwindcss-rails`
+- Hotwire (Turbo + Stimulus)
+- Solid Queue / Solid Cache / Solid Cable — toda a infra assíncrona em PG
+- Propshaft (asset pipeline) + Importmap (sem bundler JS)
+- Kamal 2 (deploy)
+- Rubocop omakase, Brakeman, bundler-audit
 
-* How to run the test suite
+**Não usa:** Redis, Sidekiq, Devise, React, Webpack, Node em produção.
 
-* Services (job queues, cache servers, search engines, etc.)
+## O que tem hoje
 
-* Deployment instructions
+**Auth nativa Rails 8 estendida com 10 camadas de hardening** (ver ADR 0002):
 
-* ...
+1. Email confirmation por token assinado (`generate_token_for(:email_confirmation)`, sem coluna no DB).
+2. Account lockout — 5 falhas em 15 minutos.
+3. Rate limit cross-process via `rack-attack` em cima do `Rails.cache` (Solid Cache em prod).
+4. Validador de senha forte (12+ chars, complexidade) + checagem opcional na Pwned Passwords API com fail-open.
+5. 2FA TOTP via `rotp` + QR code via `rqrcode`. Secret encrypted via Active Record Encryption.
+6. 8 backup codes single-use, armazenados com bcrypt.
+7. UI de sessões ativas em `/settings/sessions` — revoke individual e "revoke all others".
+8. Sudo mode — re-autenticação por password recente (≤15min) para ações sensíveis.
+9. Audit log assíncrono em `auth_events` via Solid Queue, com GIN index em `metadata` jsonb.
+10. Honeypot anti-bot no signup — campo invisível que retorna 200 OK fake se preenchido.
+
+Login flow testado ponta-a-ponta com user de seed. **Zero gem de auth no Gemfile** (sem Devise, sem Sorcery, sem Rodauth).
+
+**Scaffolds CRM iniciais:** `Account`, `Contact`, `Stage`, `Deal`, `Activity` gerados pelo Rails. Relacionamentos `has_many`, scoping multi-tenant por `workspace_id` e policies Pundit virão nos próximos PRs.
+
+## Como rodar local
+
+```bash
+# Pré-requisitos
+rbenv install 4.0.5 && rbenv local 4.0.5
+# Postgres rodando em localhost:5432, user=postgres password=postgres
+
+bundle install
+bin/rails db:create db:migrate db:seed
+bin/rails tailwindcss:build
+bin/rails server
+
+# Acesse http://localhost:3000
+# Login: demo@pipelinehq.test / DemoUser!2026PipelineHQ
+```
+
+Pra rodar Rails + Tailwind watcher em paralelo:
+
+```bash
+bin/dev
+```
+
+Pra rodar o worker do Solid Queue em foreground (necessário pra audit log assíncrono e mailers):
+
+```bash
+bin/jobs
+```
+
+## Decisões de arquitetura
+
+ADRs vivem em `docs/adr/`. As duas decisões fundacionais hoje:
+
+- [ADR 0001 — Auth nativa do Rails 8 em vez de Devise](docs/adr/0001-auth-nativa-rails-8.md)
+- [ADR 0002 — 10 camadas de hardening sobre a auth nativa](docs/adr/0002-camadas-hardening-auth.md)
+
+Novas decisões transversais (multi-tenancy, framework de testes, engine de escalação, IA) entram como ADRs incrementais antes da implementação.
+
+## Roadmap
+
+- Multi-tenancy por `workspace_id` (concern `CurrentWorkspace`, scoping em todos os controllers).
+- Pipeline kanban com Turbo Streams + Stimulus para drag-and-drop entre stages.
+- Engine de escalação — `EscalationRule` + job recorrente em Solid Queue.
+- IA copiloto em `app/services/ai/` — lead scoring e draft de email via Claude API.
+- Framework de testes (Minitest omakase) + cobertura mínima por feature (regra 29).
+- Deploy Kamal 2 em VPS único, sem orquestrador externo.
+
+## Estrutura de diretórios
+
+```
+app/
+  controllers/     # finos por design (regra 1)
+  models/          # User, Session, AuthEvent, Account, Contact, Deal, ...
+  services/auth/   # Result.success/failure, sem callback de side effect
+  views/           # Tailwind v4 + Hotwire partials
+config/
+  initializers/    # rack_attack.rb, etc.
+db/migrate/        # migrations versionadas; strong_migrations virá no roadmap
+docs/adr/          # decisões arquiteturais
+posts/             # rascunhos de comunicação do portfólio
+```
+
+Detalhe completo da convenção (Service Object, Query Object, ViewComponent, Form Object) em `CLAUDE.md`.
+
+## Licença
+
+MIT (placeholder — arquivo `LICENSE` será adicionado antes da publicação pública).

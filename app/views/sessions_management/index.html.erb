@@ -1,0 +1,33 @@
+<% content_for :title, "Sessões ativas" %>
+<div class="mx-auto max-w-3xl space-y-6 p-6">
+  <header class="flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-semibold tracking-tight">Sessões ativas</h1>
+      <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">Revogue dispositivos que você não reconhece.</p>
+    </div>
+    <%= render ButtonSecondaryComponent.new(label: "Revogar todas as outras",
+          path: sessions_management_destroy_all_path, method: :delete,
+          variant: :danger, confirm: "Tem certeza?") %>
+  </header>
+
+  <ul class="divide-y divide-zinc-200 rounded-lg border border-zinc-200 dark:divide-zinc-800 dark:border-zinc-800">
+    <% @sessions.each do |s| %>
+      <li class="flex items-center justify-between gap-4 p-4">
+        <div>
+          <p class="font-medium"><%= s.user_agent.presence || "Dispositivo desconhecido" %></p>
+          <p class="text-xs text-zinc-500 dark:text-zinc-400">
+            <%= s.ip_address %> &middot; ativo <%= time_ago_in_words(s.last_active_at || s.created_at) %> atrás
+            <% if s == current_session %>
+              &middot; <span class="rounded bg-emerald-100 px-1.5 py-0.5 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-100">sessão atual</span>
+            <% end %>
+          </p>
+        </div>
+        <% unless s == current_session %>
+          <%= render ButtonSecondaryComponent.new(label: "Revogar",
+                path: sessions_management_destroy_path(s), method: :delete,
+                variant: :danger) %>
+        <% end %>
+      </li>
+    <% end %>
+  </ul>
+</div>

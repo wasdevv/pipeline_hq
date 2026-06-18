@@ -1,21 +1,39 @@
 Rails.application.routes.draw do
-  resource :session
-  resources :passwords, param: :token
+  root "home#show"
+
+  # Auth público
+  resource  :session, only: %i[new create destroy]
+  resource  :registration, only: %i[new create], path: "sign_up"
+  resources :confirmations, only: %i[new create show], param: :token
+  resources :passwords, only: %i[new create edit update], param: :token
+
+  # 2FA durante login (público)
+  get  "two_factor/verify",  to: "two_factors#verify",  as: :two_factor_verify
+  post "two_factor/verify",  to: "two_factors#consume"
+
+  # 2FA gerenciamento (autenticado + sudo)
+  resource :two_factor, only: %i[show destroy] do
+    get  :enroll
+    post :enroll, action: :confirm
+    post :backup_codes, action: :regenerate_backup_codes
+  end
+
+  # Sessões ativas (autenticado)
+  scope :sessions_management do
+    get    "/", to: "sessions_management#index",       as: :sessions_management_index
+    delete "/", to: "sessions_management#destroy_all", as: :sessions_management_destroy_all
+    delete ":id", to: "sessions_management#destroy",   as: :sessions_management_destroy
+  end
+
+  # Sudo
+  resource :sudo, only: %i[new create], controller: "sudo_sessions"
+
+  # CRM resources (autenticadas)
   resources :activities
   resources :deals
   resources :stages
   resources :contacts
   resources :accounts
-  # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
-  # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
-  # Can be used by load balancers and uptime monitors to verify that the app is live.
   get "up" => "rails/health#show", as: :rails_health_check
-
-  # Render dynamic PWA files from app/views/pwa/* (remember to link manifest in application.html.erb)
-  # get "manifest" => "rails/pwa#manifest", as: :pwa_manifest
-  # get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
-
-  # Defines the root path route ("/")
-  # root "posts#index"
 end

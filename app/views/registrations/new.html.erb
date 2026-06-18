@@ -1,0 +1,35 @@
+<% content_for :title, "Sign up — PipelineHQ" %>
+<%= render AuthShellComponent.new(
+      title: "Crie sua conta",
+      subtitle: "Comece a usar o PipelineHQ em segundos.",
+      footer: %(Já tem conta? #{link_to "Entrar", new_session_path, class: "font-medium text-indigo-600 hover:underline dark:text-indigo-400"})
+    ) do %>
+  <% if @user&.errors&.any? %>
+    <div role="alert" class="mb-4 rounded-md border border-rose-200 bg-rose-50 p-3 text-sm text-rose-900 dark:border-rose-900 dark:bg-rose-950 dark:text-rose-100">
+      <ul class="list-disc pl-5">
+        <% @user.errors.full_messages.each do |msg| %><li><%= msg %></li><% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <%= form_with model: (@user || User.new), url: registration_path, scope: :user, local: true, data: { controller: "honeypot" }, class: "space-y-4" do |f| %>
+    <%# honeypot anti-bot %>
+    <div data-honeypot-target="trap" aria-hidden="true" style="position:absolute; left:-10000px; top:auto; width:1px; height:1px; overflow:hidden;">
+      <label>Apelido<%= text_field_tag :nickname, nil, autocomplete: "off", tabindex: -1 %></label>
+    </div>
+
+    <%= render FormFieldComponent.new(form: f, name: :name, label: "Nome", type: :text,
+          autocomplete: "name", required: true) %>
+
+    <%= render FormFieldComponent.new(form: f, name: :email_address, label: "Email", type: :email,
+          autocomplete: "email", required: true) %>
+
+    <%= render FormFieldComponent.new(form: f, name: :password, label: "Senha (mín. 12 caracteres)", type: :password,
+          autocomplete: "new-password", required: true) %>
+
+    <%= render FormFieldComponent.new(form: f, name: :password_confirmation, label: "Confirme a senha", type: :password,
+          autocomplete: "new-password", required: true) %>
+
+    <%= render ButtonPrimaryComponent.new(label: "Criar conta", form: f) %>
+  <% end %>
+<% end %>

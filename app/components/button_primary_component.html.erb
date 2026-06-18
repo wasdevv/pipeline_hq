@@ -1,0 +1,5 @@
+<% if @form %>
+  <%= @form.submit @label, class: ButtonPrimaryComponent::CLASSES %>
+<% else %>
+  <%= submit_tag @label, class: ButtonPrimaryComponent::CLASSES %>
+<% end %>

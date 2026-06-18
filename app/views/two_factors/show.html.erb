@@ -1,0 +1,21 @@
+<% content_for :title, "Two-Factor Authentication" %>
+<div class="mx-auto max-w-2xl space-y-6 p-6">
+  <header>
+    <h1 class="text-2xl font-semibold tracking-tight">Autenticação em duas etapas</h1>
+  </header>
+
+  <% if @enabled %>
+    <div class="rounded-lg border border-emerald-300 bg-emerald-50 p-4 text-sm text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-100">
+      Ativo. Você tem <%= @backup_count %> backup codes restantes.
+    </div>
+
+    <div class="flex flex-wrap gap-3">
+      <%= render ButtonSecondaryComponent.new(label: "Gerar novos backup codes", path: backup_codes_two_factor_path, method: :post) %>
+      <%= render ButtonSecondaryComponent.new(label: "Desativar 2FA", path: two_factor_path, method: :delete,
+            variant: :danger, confirm: "Tem certeza? Vai reduzir a segurança da conta.") %>
+    </div>
+  <% else %>
+    <p class="text-sm text-zinc-500 dark:text-zinc-400">2FA não está ativo. Recomendamos ativar.</p>
+    <%= button_to "Ativar 2FA", enroll_two_factor_path, method: :get, class: ButtonPrimaryComponent::CLASSES %>
+  <% end %>
+</div>
