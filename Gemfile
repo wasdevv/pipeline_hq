@@ -37,6 +37,9 @@ gem "view_component"     # componentes UI reutilizáveis (R3)
 # === Money ===
 gem "money-rails"        # money types em colunas *_cents
 
+# === i18n ===
+gem "rails-i18n"
+
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem "tzinfo-data", platforms: %i[ windows jruby ]
 
@@ -69,6 +72,23 @@ group :development, :test do
 
   # Omakase Ruby styling [https://github.com/rails/rubocop-rails-omakase/]
   gem "rubocop-rails-omakase", require: false
+
+  gem "rspec-rails"
+  gem "factory_bot_rails"
+  gem "faker"
+  gem "shoulda-matchers"
+end
+
+group :test do
+  gem "capybara"
+  gem "selenium-webdriver"
+  gem "database_cleaner-active_record"
+  gem "timecop"
+  gem "webmock", require: false
+  gem "vcr", require: false
+  gem "rails-controller-testing"
+  gem "rspec-benchmark"
+  gem "simplecov", require: false
 end
 
 group :development do
@@ -83,4 +103,9 @@ group :development do
 
   # Anota schema nos models
   gem "annotaterb"
+
+  gem "rack-mini-profiler"
+  gem "memory_profiler"
+  gem "flamegraph"
+  gem "stackprof"
 end

@@ -24,7 +24,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Solid Queue / Cache / Cable** — tudo no PG, sem Redis.
 - **Kamal 2** (deploy).
 - **Rubocop omakase**, **Brakeman**, **bundler-audit** (já no projeto).
-- **Testes: RSpec** (decisão travada). **Setup pendente** — adicionar `rspec-rails`, `factory_bot_rails`, `faker`, `capybara`, `selenium-webdriver` em `:development, :test`.
+- **Testes: RSpec instalado + configurado.** Stack: rspec-rails, factory_bot_rails, faker, shoulda-matchers, capybara, selenium-webdriver (Selenium Manager nativo Rails 8), database_cleaner-active_record, timecop, webmock, vcr, rails-controller-testing, rspec-benchmark, simplecov (branch coverage). Locale padrão pt-BR via rails-i18n.
 
 ## Gems instaladas (Gemfile)
 
@@ -34,7 +34,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Safety/UI**: strong_migrations, money-rails, view_component.
 
-**Dev**: debug, bundler-audit, brakeman, rubocop-rails-omakase, web-console, letter_opener, bullet, annotaterb.
+**i18n**: rails-i18n.
+
+**Dev**: debug, bundler-audit, brakeman, rubocop-rails-omakase, web-console, letter_opener, bullet, annotaterb, rack-mini-profiler, memory_profiler, flamegraph, stackprof.
+
+**Test stack**: rspec-rails, factory_bot_rails, faker, shoulda-matchers, capybara, selenium-webdriver, database_cleaner-active_record, timecop, webmock, vcr, rails-controller-testing, rspec-benchmark, simplecov.
 
 ## Comandos comuns
 
@@ -72,6 +76,13 @@ bin/rubocop                # lint
 bin/rubocop -a             # autocorrect seguro
 bin/brakeman               # security scan
 bin/bundler-audit          # CVEs em gems
+
+# Testes (RSpec)
+bundle exec rspec                   # suite completa
+bundle exec rspec spec/models       # só specs de model
+bundle exec rspec spec/services/sessions/sign_in_spec.rb:42  # spec específico
+open coverage/index.html            # cobertura SimpleCov (gerada após cada run)
+FACTORY_LINT=1 bundle exec rspec    # valida todas as factories antes de rodar
 
 # Jobs (Solid Queue)
 bin/jobs                   # worker em foreground
@@ -214,6 +225,13 @@ docs/adr/
 └── 0002-camadas-hardening-auth.md
 
 posts/                                 # 4 posts LinkedIn (anúncio + 3 seguimento)
+
+spec/
+├── config_spec.rb                  # smoke: env, locale, factory, WebMock
+├── factories/users.rb              # :user + traits :unconfirmed, :locked, :with_2fa
+├── rails_helper.rb                 # FactoryBot, Shoulda, DatabaseCleaner, WebMock
+├── spec_helper.rb                  # SimpleCov no topo (branch coverage)
+└── support/passwords.rb            # stub global Passwords::BreachCheck
 
 .claude/agents/                        # 10 subagents project-level (coordinator, planner, architect, rails-engineer, frontend-engineer, data-agent, tester, reviewer, writer, summariser)
 ```
@@ -360,7 +378,7 @@ Em `/home/was/projetos/.claude/settings.local.json`. Liberado por padrão: rbenv
 
 ## Roadmap atual (prioridade decrescente)
 
-1. **RSpec setup + specs críticos** — adicionar gems + `bin/rails generate rspec:install` + cobrir `Users::Register`, `Sessions::SignIn` (5 caminhos), `TwoFactor::Verify`, 1 system test ponta-a-ponta (signup → confirm → login → 2FA enroll → verify). **Bloqueador antes de deploy** (auth não testada = CVE territory).
+1. **Specs críticos da auth** — setup RSpec/SimpleCov/DatabaseCleaner pronto e verde (smoke). Falta cobrir `Users::Register` (paths do Result + honeypot), `Sessions::SignIn` (5 caminhos), `TwoFactor::Verify` (TOTP + backup code), 1 system test ponta-a-ponta (signup → confirm → login → 2FA enroll → verify). **Bloqueador antes de deploy** (auth sem testes = CVE territory).
 2. **Multi-tenancy** — model `Workspace`, `workspace_memberships`, scoping por `current_workspace` (concern), migrar todos os models CRM para `belongs_to :workspace`. Reviewer flagou como dívida em todos os controllers atuais.
 3. **CRM real (kanban)** — relacionamentos `has_many` nos models, kanban Hotwire com Turbo Streams drag-and-drop em real-time.
 4. **IA copiloto** — `app/services/ai/` com Claude API: lead scoring + draft de email contextual.
@@ -439,3 +457,12 @@ Posts LinkedIn em `posts/01-04-*.md`.
 - **Reviewer ortodoxo** (não passa a mão) bloqueou no `# frozen_string_literal: true` faltando em `application_controller.rb` e `current.rb` — coisa que outro reviewer "soft" ignoraria. Disciplina paga depois.
 - **Centralização vertical**: `mx-auto max-w-sm` só centraliza horizontal. Pra V+H precisa de `flex min-h-screen items-center justify-center`. Casa típica de auth — virou `AuthShellComponent`.
 - **Sempre `Rails.env.production?` em `cookies.signed.permanent`**: `secure: true` sempre quebra dev (HTTP). `secure: Rails.env.production?` é o padrão.
+
+### Feature: RSpec + SimpleCov + pt-BR + profiler dev (2026-06-18)
+- **SimpleCov tem que carregar ANTES do Rails**: no topo absoluto de `spec_helper.rb`, antes de qualquer `require`. `.rspec` com `--require spec_helper` garante ordem; se carregar dentro de `rails_helper.rb`, perde ~80% do código (autoloaded depois do start).
+- **Stub global de `Passwords::BreachCheck` em `spec/support/passwords.rb`** elimina rede HIBP em toda factory `:user`. Production code (validator + service) intocado — princípio "test isolation, not production patching". Dívida: ao escrever o spec do próprio `BreachCheck`, scopar o stub por metadata pra não auto-testar o mock.
+- **Shoulda Matchers só injeta DSL em groups `type: :model`** — smoke spec genérico (`describe "X"`) não tem `validate_presence_of`. Conclusão: smoke spec testa config; matchers vão pros model specs onde o tipo é inferível.
+- **`config.use_transactional_fixtures = false` + DatabaseCleaner com strategy condicional** (transaction default, truncation pra `js:` ou `type: :system`) é o padrão correto pra Rails 8 + Capybara/Selenium. Transactional fixtures sozinhas vazam dados entre threads do Capybara em system specs.
+- **rails-i18n + `config.i18n.default_locale = :"pt-BR"`** zera o trabalho manual de traduzir Active Record errors, helpers de data, e number formatting. AR/validations falavam inglês em flash messages antes; agora respeitam locale.
+- **Selenium Manager nativo no Rails 8** = `selenium-webdriver` sem gem `webdrivers`. Driver baixa automático no primeiro `headless_chrome` request. Menos gem, menos manutenção.
+- **rack-mini-profiler com FileStore em `tmp/miniprofiler`** evita dependência de Redis em dev. Badge no top-left mostra SQL + render time por request — fica o sinal visual constante de regressão de performance.

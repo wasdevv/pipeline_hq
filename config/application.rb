@@ -36,7 +36,22 @@ module PipelineHq
     # config.time_zone = "Central Time (US & Canada)"
     # config.eager_load_paths << Rails.root.join("extras")
 
-    # Don't generate system test files.
     config.generators.system_tests = nil
+
+    config.i18n.default_locale = :"pt-BR"
+    config.i18n.available_locales = %i[pt-BR en]
+    config.i18n.fallbacks = [ :en ]
+
+    config.time_zone = "Brasilia"
+
+    config.generators do |g|
+      g.test_framework :rspec,
+        fixtures: false,
+        view_specs: false,
+        helper_specs: false,
+        routing_specs: false,
+        request_specs: true
+      g.factory_bot dir: "spec/factories"
+    end
   end
 end
