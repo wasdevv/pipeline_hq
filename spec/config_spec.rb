@@ -18,8 +18,8 @@ RSpec.describe "Test stack configuration" do
     expect(user.email_address).to match(/@pipelinehq\.test\z/)
   end
 
-  it "blocks external HTTP calls via WebMock" do
-    expect { Net::HTTP.get(URI("https://example.com")) }
-      .to raise_error(WebMock::NetConnectNotAllowedError)
+  it "wraps every example in a VCR cassette" do
+    expect(VCR.current_cassette).not_to be_nil
+    expect(VCR.current_cassette.name).to eq("shared/pwned_breach_check")
   end
 end
