@@ -14,7 +14,7 @@ module SudoRequired
   def require_sudo!
     return if current_session&.sudo?
 
-    session[:sudo_return_to] = request.url if request.get?
+    session[:sudo_return_to] = request.url if request.get? || request.head?
     redirect_to new_sudo_path, alert: "Confirme sua senha para continuar."
   end
 end
