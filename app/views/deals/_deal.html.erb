@@ -1,0 +1,34 @@
+<div id="<%= dom_id deal %>" class="w-full sm:w-auto my-5 space-y-5">
+  <div>
+    <strong class="block font-medium mb-1">Title:</strong>
+    <%= deal.title %>
+  </div>
+  <div>
+    <strong class="block font-medium mb-1">Account:</strong>
+    <%= deal.account_id %>
+  </div>
+  <div>
+    <strong class="block font-medium mb-1">Contact:</strong>
+    <%= deal.contact_id %>
+  </div>
+  <div>
+    <strong class="block font-medium mb-1">Stage:</strong>
+    <%= deal.stage_id %>
+  </div>
+  <div>
+    <strong class="block font-medium mb-1">Amount cents:</strong>
+    <%= deal.amount_cents %>
+  </div>
+  <div>
+    <strong class="block font-medium mb-1">Currency:</strong>
+    <%= deal.currency %>
+  </div>
+  <div>
+    <strong class="block font-medium mb-1">Expected close on:</strong>
+    <%= deal.expected_close_on %>
+  </div>
+  <div>
+    <strong class="block font-medium mb-1">Status:</strong>
+    <%= deal.status %>
+  </div>
+</div>
