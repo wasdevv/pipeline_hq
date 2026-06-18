@@ -29,3 +29,8 @@
 
 en:
   hello: "Hello world"
+  errors:
+    messages:
+      too_short: "deve ter no mínimo %{count} caracteres"
+      weak: "deve ter ao menos 3 entre: minúscula, maiúscula, dígito, símbolo"
+      pwned: "apareceu em vazamentos públicos. Escolha outra"

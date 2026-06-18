@@ -1,0 +1,4 @@
+<p>Olá <%= @user.name %>,</p>
+<p>Confirme seu email no PipelineHQ:</p>
+<p><%= link_to "Confirmar email", confirmation_url(token: @token) %></p>
+<p>O link expira em 24 horas.</p>
