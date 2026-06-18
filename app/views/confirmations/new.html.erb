@@ -1,0 +1,12 @@
+<% content_for :title, "Confirmar email — PipelineHQ" %>
+<%= render AuthShellComponent.new(
+      title: "Confirme seu email",
+      subtitle: "Enviamos um link de confirmação. Não chegou? Pode reenviar.",
+      footer: link_to("Voltar para login", new_session_path, class: "font-medium text-indigo-600 hover:underline dark:text-indigo-400")
+    ) do %>
+  <%= form_with url: confirmations_path, local: true, class: "space-y-4" do |f| %>
+    <%= render FormFieldComponent.new(name: :email_address, label: "Email", type: :email,
+          value: params[:email_address], autocomplete: "email", required: true) %>
+    <%= render ButtonPrimaryComponent.new(label: "Reenviar email") %>
+  <% end %>
+<% end %>

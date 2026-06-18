@@ -1,31 +1,41 @@
-<div class="mx-auto md:w-2/3 w-full">
-  <% if alert = flash[:alert] %>
-    <p class="py-2 px-3 bg-red-50 mb-5 text-red-500 font-medium rounded-lg inline-block" id="alert"><%= alert %></p>
-  <% end %>
-
-  <% if notice = flash[:notice] %>
-    <p class="py-2 px-3 bg-green-50 mb-5 text-green-500 font-medium rounded-lg inline-block" id="notice"><%= notice %></p>
-  <% end %>
-
-  <h1 class="font-bold text-4xl">Sign in</h1>
-
-  <%= form_with url: session_url, class: "contents" do |form| %>
-    <div class="my-5">
-      <%= form.email_field :email_address, required: true, autofocus: true, autocomplete: "username", placeholder: "Enter your email address", value: params[:email_address], class: "block shadow-sm rounded-md border border-gray-400 focus:outline-blue-600 px-3 py-2 mt-2 w-full" %>
+<% content_for :title, "Sign in — PipelineHQ" %>
+<div class="grid min-h-[calc(100vh-4rem)] lg:grid-cols-2">
+  <aside class="relative hidden overflow-hidden bg-gradient-to-br from-indigo-600 via-violet-600 to-fuchsia-600 lg:flex lg:flex-col lg:justify-between lg:p-12 lg:text-white">
+    <div class="absolute inset-0 opacity-20 [background-image:radial-gradient(rgba(255,255,255,.35)_1px,transparent_1px)] [background-size:18px_18px]"></div>
+    <div class="relative">
+      <%= link_to root_path, class: "inline-flex items-center gap-2 text-2xl font-semibold tracking-tight" do %>
+        <svg viewBox="0 0 24 24" class="size-7" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 6h16M4 12h10M4 18h6"/></svg>
+        PipelineHQ
+      <% end %>
     </div>
-
-    <div class="my-5">
-      <%= form.password_field :password, required: true, autocomplete: "current-password", placeholder: "Enter your password", maxlength: 72, class: "block shadow-sm rounded-md border border-gray-400 focus:outline-blue-600 px-3 py-2 mt-2 w-full" %>
+    <div class="relative max-w-md space-y-3">
+      <h1 class="text-3xl font-semibold leading-tight">Close more deals.<br>Built for teams that ship.</h1>
+      <p class="text-white/80">CRM B2B com escalação automática, real-time pipeline e IA copiloto. Open-source.</p>
     </div>
+    <div class="relative text-sm text-white/70">v1.0 launched yesterday</div>
+  </aside>
 
-    <div class="col-span-6 sm:flex sm:items-center sm:gap-4">
-      <div class="inline">
-        <%= form.submit "Sign in", class: "w-full sm:w-auto text-center rounded-md px-3.5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white inline-block font-medium cursor-pointer" %>
-      </div>
+  <section class="flex items-center justify-center px-6 py-12 sm:px-12">
+    <div class="w-full max-w-sm">
+      <%= render "shared/flash" %>
 
-      <div class="mt-4 text-sm text-gray-500 sm:mt-0">
-        <%= link_to "Forgot password?", new_password_path, class: "text-gray-700 underline hover:no-underline" %>
-      </div>
+      <%= render AuthHeaderComponent.new(title: "Sign in", subtitle: "Continue para o seu pipeline.") %>
+
+      <%= form_with url: session_path, local: true, class: "space-y-4" do |f| %>
+        <%= render FormFieldComponent.new(name: :email_address, label: "Email", type: :email,
+              value: params[:email_address], autocomplete: "email", autofocus: true, required: true) %>
+
+        <%= render FormFieldComponent.new(name: :password, label: "Senha", type: :password,
+              autocomplete: "current-password", required: true,
+              action_label: "Esqueci a senha", action_path: new_password_path) %>
+
+        <%= render ButtonPrimaryComponent.new(label: "Sign in") %>
+      <% end %>
+
+      <p class="mt-6 text-center text-sm text-zinc-500 dark:text-zinc-400">
+        Não tem conta?
+        <%= link_to "Crie agora", new_registration_path, class: "font-medium text-indigo-600 hover:underline dark:text-indigo-400" %>
+      </p>
     </div>
-  <% end %>
+  </section>
 </div>

@@ -1,0 +1,5 @@
+<% if @method %>
+  <%= button_to @label, @path, method: @method, data: data, class: classes %>
+<% else %>
+  <%= link_to @label, @path, class: classes %>
+<% end %>

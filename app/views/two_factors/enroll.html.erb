@@ -1,0 +1,26 @@
+<% content_for :title, "Ativar 2FA" %>
+<div class="mx-auto max-w-2xl space-y-6 p-6">
+  <header>
+    <h1 class="text-2xl font-semibold tracking-tight">Ativar autenticação em duas etapas</h1>
+    <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">Escaneie o QR code no Google Authenticator, 1Password ou similar. Depois digite o código de 6 dígitos.</p>
+  </header>
+
+  <div class="rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
+    <div class="flex flex-col items-center gap-4 sm:flex-row">
+      <div class="rounded bg-white p-2"><%= raw @qr_svg %></div>
+      <div>
+        <p class="text-sm text-zinc-500 dark:text-zinc-400">Ou digite manualmente:</p>
+        <code class="mt-1 inline-block break-all rounded bg-zinc-100 px-2 py-1 text-xs dark:bg-zinc-800"><%= @secret %></code>
+      </div>
+    </div>
+  </div>
+
+  <%= form_with url: enroll_two_factor_path, method: :post, local: true, class: "space-y-4" do |f| %>
+    <%= render FormFieldComponent.new(name: :code, label: "Código do app", type: :text,
+          autofocus: true, required: true,
+          inputmode: "numeric", autocomplete: "one-time-code",
+          class_extra: "text-center text-lg tracking-[0.5em]",
+          data: { controller: "otp-input" }) %>
+    <%= render ButtonPrimaryComponent.new(label: "Confirmar e ativar") %>
+  <% end %>
+</div>

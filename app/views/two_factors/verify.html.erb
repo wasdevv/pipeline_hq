@@ -1,0 +1,14 @@
+<% content_for :title, "Verificação 2FA" %>
+<%= render AuthShellComponent.new(
+      title: "Código de verificação",
+      subtitle: "Abra seu aplicativo authenticator e digite o código atual. Ou use um backup code."
+    ) do %>
+  <%= form_with url: two_factor_verify_path, local: true, class: "space-y-4" do |f| %>
+    <%= render FormFieldComponent.new(name: :code, label: "Código", type: :text,
+          autofocus: true, required: true,
+          inputmode: "numeric", autocomplete: "one-time-code",
+          class_extra: "text-center text-lg tracking-[0.5em]",
+          data: { controller: "otp-input" }) %>
+    <%= render ButtonPrimaryComponent.new(label: "Verificar") %>
+  <% end %>
+<% end %>

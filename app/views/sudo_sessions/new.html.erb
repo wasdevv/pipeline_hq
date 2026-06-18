@@ -1,0 +1,11 @@
+<% content_for :title, "Confirme sua senha" %>
+<%= render AuthShellComponent.new(
+      title: "Modo seguro",
+      subtitle: "Confirme sua senha para continuar. Vale por 15 minutos."
+    ) do %>
+  <%= form_with url: sudo_path, local: true, class: "space-y-4" do |f| %>
+    <%= render FormFieldComponent.new(name: :password, label: "Senha", type: :password,
+          autofocus: true, autocomplete: "current-password", required: true) %>
+    <%= render ButtonPrimaryComponent.new(label: "Confirmar") %>
+  <% end %>
+<% end %>
