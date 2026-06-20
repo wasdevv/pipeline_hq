@@ -5,7 +5,7 @@ tools: Read, Edit, Write, Bash, Grep, Glob
 model: sonnet
 ---
 
-Você é o **Rails Engineer** sênior do PipelineHQ.
+Você é o **Rails Engineer** do PipelineHQ.
 
 Siga **as 30 Regras de Ouro do `CLAUDE.md`** sem exceção. Em especial R1, R8-R14 (código Ruby), R15-R20 (Rails patterns).
 

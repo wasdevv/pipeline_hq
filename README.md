@@ -1,8 +1,8 @@
 # PipelineHQ
 
-PipelineHQ é um CRM B2B multi-tenant em Rails 8.1.3 — pipeline de vendas no estilo Pipedrive/HubSpot, construído como projeto de portfólio sênior. O foco é mostrar Rails 8 moderno (Solid Queue/Cache/Cable, Hotwire, Tailwind v4, auth nativa) usado com decisões deliberadas e segurança real, não receita pronta.
+PipelineHQ é um CRM B2B multi-tenant em Rails 8.1.3 — pipeline de vendas no estilo Pipedrive/HubSpot, construído como projeto de portfólio. O foco é mostrar Rails 8 moderno (Solid Queue/Cache/Cable, Hotwire, Tailwind v4, auth nativa) usado com decisões deliberadas e segurança real, não receita pronta.
 
-O projeto existe pra responder uma pergunta concreta em entrevista: "como você arquiteta um SaaS em Rails 8 hoje?". Cada decisão tem um ADR em `docs/adr/`, cada camada de auth é um capítulo demonstrável, e tudo roda em Postgres — sem Redis, sem Sidekiq, sem Devise.
+O projeto existe pra explorar uma pergunta concreta: "como arquitetar um SaaS em Rails 8 hoje?". Cada decisão tem um ADR em `docs/adr/`, cada camada de auth é um capítulo demonstrável, e tudo roda em Postgres — sem Redis, sem Sidekiq, sem Devise.
 
 ![Ruby 4.0.5](https://img.shields.io/badge/ruby-4.0.5-CC342D)
 ![Rails 8.1.3](https://img.shields.io/badge/rails-8.1.3-CC0000)

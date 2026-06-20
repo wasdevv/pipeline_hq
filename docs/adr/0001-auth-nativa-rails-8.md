@@ -13,7 +13,7 @@ bin/rails generate authentication
 
 Esse gerador entrega um esqueleto mínimo porém funcional: model `User` com `has_secure_password`, model `Session` DB-backed (sem cookie-store de sessão tradicional), fluxo de password reset via token assinado, mailer básico e a macro `rate_limit` disponível direto no `ActionController::Base`. Tudo em código gerado no app — sem mágica de engine montada.
 
-O PipelineHQ é um CRM B2B multi-tenant em Rails 8 desenvolvido como **projeto de portfólio de um dev Rails sênior em busca ativa de vaga (rescisão em junho/2026)**. A autenticação é a primeira decisão arquitetural visível do projeto, e a leitura de quem avalia o repositório precisa ser inequívoca: "este dev conhece o Rails 8 moderno em profundidade".
+O PipelineHQ é um CRM B2B multi-tenant em Rails 8 desenvolvido como **projeto de portfólio**. A autenticação é a primeira decisão arquitetural visível do projeto, então a escolha precisa estar bem justificada e exercitar o Rails 8 moderno em profundidade.
 
 Restrições e contexto adicional:
 
