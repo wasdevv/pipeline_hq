@@ -10,6 +10,8 @@ require "rspec/rails"
 require "shoulda/matchers"
 require "webmock/rspec"
 require "database_cleaner/active_record"
+require "view_component/test_helpers"
+require "capybara/rspec"
 
 Rails.root.glob("spec/support/**/*.rb").sort_by(&:to_s).each { |f| require f }
 
@@ -35,6 +37,8 @@ RSpec.configure do |config|
   config.include FactoryBot::Syntax::Methods
   config.include ActiveSupport::Testing::TimeHelpers
   config.include Rails.application.routes.url_helpers
+  config.include ViewComponent::TestHelpers, type: :component
+  config.include Capybara::RSpecMatchers, type: :component
 
   config.filter_rails_from_backtrace!
 
