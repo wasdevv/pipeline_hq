@@ -7,7 +7,7 @@
 
 O ADR 0001 fixou a decisão de usar o gerador nativo de autenticação do Rails 8 em vez de Devise. O gerador entrega apenas o básico: model `User` com `has_secure_password`, `Session` DB-backed, password reset por token assinado e a macro `rate_limit` no controller. Tudo o mais — confirmação de email, lockout, 2FA, audit, gestão de sessões ativas, sudo mode, rate limit cross-process — é responsabilidade do app.
 
-Para o PipelineHQ ser **production-ready 2026** (e defensável em review de segurança e em entrevista técnica), precisamos defesa em profundidade. A premissa de design é: **nenhuma camada sozinha é suficiente; o conjunto é**. Se um atacante quebra rate limit, o lockout segura; se passa do lockout, 2FA segura; se passa de 2FA, o audit log denuncia.
+Para o PipelineHQ ser **production-ready 2026** (defensável em qualquer review de segurança séria), precisamos defesa em profundidade. A premissa de design é: **nenhuma camada sozinha é suficiente; o conjunto é**. Se um atacante quebra rate limit, o lockout segura; se passa do lockout, 2FA segura; se passa de 2FA, o audit log denuncia.
 
 Restrições adicionais do projeto:
 
@@ -40,7 +40,7 @@ Implementar **10 camadas de hardening** sobre a auth nativa do Rails 8, todas em
 - **Audit log dá observabilidade real** — `AuthEvent` responde "esse login veio de onde?" e "essa conta foi locada quando?" sem grep em log de aplicação. GIN index em jsonb permite query por payload arbitrário (ex.: "todos os eventos com `failure_reason: 'invalid_otp'` nos últimos 7d").
 - **Active Record Encryption no `otp_secret`** garante que vazamento de dump de DB não compromete 2FA dos usuários.
 - **Pwned com fail-open** evita o anti-padrão clássico de "dependência externa derruba meu signup". Timeout curto + fallback para validação local.
-- **Como portfólio, cada camada é um capítulo demonstrável** — em entrevista, dá para abrir um arquivo de cada vez e explicar a decisão de design.
+- **Como portfólio, cada camada é um capítulo demonstrável** — dá para abrir um arquivo de cada vez e explicar a decisão de design em isolado.
 
 ### Ruins / trade-offs
 
