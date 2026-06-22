@@ -29,12 +29,9 @@ RSpec.describe Sessions::SignIn do
         expect { result }.to change { user.reload.failed_attempts }.from(2).to(0)
       end
 
-      it "records a login_success AuthEvent linked to the user" do
+      it "records a login_success AuthEvent with ip and user_agent metadata" do
         expect { result }.to change { AuthEvent.where(kind: "login_success", user: user).count }.by(1)
-      end
 
-      it "stores ip_address and user_agent on the AuthEvent" do
-        result
         event = AuthEvent.where(kind: "login_success", user: user).last
         expect(event.ip_address).to eq("127.0.0.1")
         expect(event.user_agent).to eq("RSpec/TestAgent")

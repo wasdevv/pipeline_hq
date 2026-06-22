@@ -13,11 +13,7 @@ RSpec.describe TwoFactor::Disable do
       end
     end
 
-    let(:user) do
-      u = create(:user, :with_2fa)
-      u.update!(otp_backup_codes: [ BCrypt::Password.create("aaaa-1111").to_s ])
-      u
-    end
+    let(:user) { create(:user, :with_2fa, :with_backup_codes) }
 
     it_behaves_like "a successful Result", code: :disabled
 

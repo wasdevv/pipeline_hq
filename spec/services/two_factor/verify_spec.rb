@@ -42,15 +42,8 @@ RSpec.describe TwoFactor::Verify do
     context "with a valid backup code" do
       let(:plain_code)     { "abcd-1234" }
       let(:secondary_code) { "wxyz-9999" }
-
-      before do
-        user.update!(otp_backup_codes: [
-          BCrypt::Password.create(plain_code),
-          BCrypt::Password.create(secondary_code)
-        ])
-      end
-
-      let(:code) { plain_code }
+      let(:user)           { create(:user, :with_2fa, :with_backup_codes, plain_codes: [ plain_code, secondary_code ]) }
+      let(:code)           { plain_code }
 
       it_behaves_like "a successful Result", code: :verified
 
@@ -69,11 +62,11 @@ RSpec.describe TwoFactor::Verify do
       end
 
       it "cannot consume the same backup code twice" do
-        perform_enqueued_jobs { described_class.call(user: user, code: code, request: request) }
-        second_attempt = described_class.call(user: user, code: code, request: request)
+        result
+        second_result = described_class.call(user: user, code: code, request: request)
 
-        expect(second_attempt).to be_failure
-        expect(second_attempt.code).to eq(:invalid_code)
+        expect(second_result).to be_failure
+        expect(second_result.code).to eq(:invalid_code)
       end
     end
 
