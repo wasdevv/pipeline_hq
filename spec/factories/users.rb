@@ -21,5 +21,13 @@ FactoryBot.define do
       otp_secret      { ROTP::Base32.random }
       otp_enabled_at  { Time.current }
     end
+
+    trait :with_backup_codes do
+      transient do
+        plain_codes { Array.new(User::BACKUP_CODE_COUNT) { SecureRandom.hex(4) } }
+      end
+
+      otp_backup_codes { plain_codes.map { |c| BCrypt::Password.create(c).to_s } }
+    end
   end
 end

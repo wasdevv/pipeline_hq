@@ -12,14 +12,6 @@ module AuthenticationHelpers
     user
   end
 
-  def with_2fa(user)
-    user.update!(
-      otp_secret:     ROTP::Base32.random,
-      otp_enabled_at: Time.current
-    )
-    user
-  end
-
   def lock_out(user)
     user.update!(
       failed_attempts: User::LOCK_THRESHOLD,
