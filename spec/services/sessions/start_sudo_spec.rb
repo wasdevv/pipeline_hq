@@ -59,6 +59,8 @@ RSpec.describe Sessions::StartSudo do
 
       before { user_session.update!(sudo_until: 5.minutes.from_now) }
 
+      it_behaves_like "a successful Result", code: :sudo_started
+
       it "refreshes sudo_until to the full 15-minute window" do
         result
         expect(user_session.reload.sudo_until).to be_within(5.seconds).of(15.minutes.from_now)
