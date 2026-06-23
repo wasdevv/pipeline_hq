@@ -74,6 +74,9 @@ jobs:
     env:
       RAILS_ENV: test
       DATABASE_URL: postgres://postgres:postgres@localhost:5432
+      ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY: ci_test_primary_key_at_least_32_chars_yo
+      ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY: ci_test_deterministic_key_32_chars_min
+      ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT: ci_test_salt_at_least_32_chars_long
     services:
       postgres:
         image: postgres:16
