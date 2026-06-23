@@ -320,40 +320,52 @@ Canônicas e referenciadas por todos os subagents. Mudar uma regra exige atualiz
 
 ---
 
-## Workflow com subagents — Hub-and-Spoke
+## Workflow com subagents — Hub-and-Spoke + LOOPS pipeline
 
-**Princípio:** o `coordinator` é o **hub**. **Subagents nunca chamam outros subagents** — só reportam ao coordinator. Conflito = coordinator resolve (citando regra) ou escala ao usuário.
+**Princípio:** o `coordinator` é o **hub** rodando pipeline LOOPS. **Subagents nunca chamam outros subagents** — só reportam ao coordinator. Conflito = coordinator resolve (citando regra) ou escala ao usuário.
 
-### Roster
+### Pipeline LOOPS (obrigatório)
 
-| Agent | Modelo | Função |
+```
+Discover → Plan → Execute → Verify → (Iterate?) → Close
+```
+
+| Fase | Responsável | Saída |
 |---|---|---|
-| `coordinator` | opus | Único que invoca outros. Decompõe, decide estratégia, agrega |
-| `planner` | opus | Decompõe pedido vago em roadmap/milestones (vem antes do architect) |
-| `architect` | opus | Design técnico (modelos, serviços, índices, trade-offs) |
-| `rails-engineer` | sonnet | Implementa backend Rails |
-| `frontend-engineer` | sonnet | Tailwind v4, Hotwire UI, ViewComponent, acessibilidade |
-| `data-agent` | sonnet | Postgres avançado: índices, EXPLAIN, materialized views, seeds |
-| `tester` | sonnet | Escreve e roda testes (vai instalar RSpec na primeira chamada) |
-| `reviewer` | sonnet | Code review enforçando as 30 regras |
-| `writer` | sonnet | README, ADR, CHANGELOG, post LinkedIn |
-| `summariser` | haiku | Condensa output longo |
+| **Discover** | coordinator | `tmp/scratch/<task_id>/discover.md` (Definition of Done + cost cap + branch plan) |
+| **Plan** | `planner` (skip se trivial) | `planner.md` (roadmap + milestones + critérios) |
+| **Execute** | `architect` → engineers → `tester` | Código + specs + scratch files de cada agent |
+| **Verify** | `verifier` | `verifier.md` com veredito `PASS` / `ITERATE` / `FAIL` |
+| **Iterate** | `iterator` | `CONTINUE` / `ESCALATE` / `DOCUMENT_AND_PASS` (limite 3 loops) |
+| **Close** | coordinator + `writer` (opcional) | Lição aprendida em CLAUDE.md + commit + PR |
 
-### Fluxo padrão
+**Cost cap:** 200k tokens cumulativos por feature. Iterator escala se passar.
 
-```
-1. DECOMPOSE — Coordinator lê CLAUDE.md, decompõe em TaskCreate
-2. ASSESS COMPLEXITY
-   Trivial   (1 arquivo, sem decisão)            → single agent
-   Normal    (2-5 arquivos, mesmo domínio)       → 2-3 agents em sequência
-   Complexa  (transversal, ambíguo, novo escopo) → planner + agents em paralelo
-3. STRATEGY
-   Single:     rails-engineer (ou agente específico)
-   Sequencial: architect → rails-engineer → tester → reviewer
-   Paralela:   architect + frontend-engineer + data-agent simultâneos
-4. AGGREGATE — merge, rank, resolve conflicts (>2k tokens passa pelo summariser)
-5. CLOSE — reviewer ✅ → writer atualiza docs → coordinator atualiza "Lições aprendidas"
-```
+### Roster (13 agents)
+
+| Agent | Modelo | Cor | Função |
+|---|---|---|---|
+| `coordinator` | opus | white | Hub LOOPS. Único que invoca outros. Discover + Close |
+| `planner` | opus | cyan | Roadmap de pedido vago/grande (antes do architect) |
+| `architect` | opus | blue | Design técnico (modelos, serviços, índices, trade-offs) |
+| `rails-engineer` | sonnet | red | Backend Rails 8 (migration/model/controller/service/job) |
+| `frontend-engineer` | sonnet | pink | Tailwind v4, Hotwire, ViewComponent, a11y |
+| `data-agent` | sonnet | yellow | Postgres avançado: índices, EXPLAIN, materialized views |
+| `tester` | sonnet | green | Escreve e roda testes (RSpec) |
+| `reviewer` | sonnet | orange | Code review enforçando as 30 regras |
+| `verifier` | sonnet | teal | **Gate**: consolida tester+reviewer em PASS/ITERATE/FAIL |
+| `iterator` | opus | amber | **Loop guard**: decide CONTINUE/ESCALATE pós-FAIL |
+| `writer` | sonnet | purple | README, ADR, CHANGELOG, descrição de PR, posts |
+| `summariser` | haiku | gray | Condensa output longo antes de relayar |
+| `agent-builder` | opus | magenta | **Meta**: cria novo agent pra domínio recorrente |
+
+### State management (scratch)
+
+Cada feature/task: `tmp/scratch/<task_id>/`. Cada agent escreve seu arquivo (`architect.md`, `rails-engineer.md`, etc). Coordinator cria no Discover e limpa no Close. Verifier sobrescreve a cada loop; iterator renomeia `verifier.md` anterior pra `verifier-<N>.md`.
+
+### Quando criar novo agent
+
+Quando aparecer **domínio recorrente** sem especialista (ex.: AI engineer pra `app/services/ai/`, security-auditor pra Brakeman+headers, copywriter pt-BR). Chame `agent-builder` com spec curta. Ele gera o `.md` seguindo o padrão (frontmatter + persona + diferenças + entregável + LOOPS protocol).
 
 ### Saída fixa de todo subagent
 
