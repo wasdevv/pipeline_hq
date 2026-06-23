@@ -1,12 +1,75 @@
 version: 2
 updates:
-- package-ecosystem: bundler
-  directory: "/"
-  schedule:
-    interval: weekly
-  open-pull-requests-limit: 10
-- package-ecosystem: github-actions
-  directory: "/"
-  schedule:
-    interval: weekly
-  open-pull-requests-limit: 10
+  - package-ecosystem: bundler
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    groups:
+      rails-stack:
+        applies-to: version-updates
+        patterns:
+          - "rails"
+          - "actionpack"
+          - "actionview"
+          - "actionmailer"
+          - "actioncable"
+          - "actiontext"
+          - "actionmailbox"
+          - "activerecord"
+          - "activemodel"
+          - "activestorage"
+          - "activesupport"
+          - "activejob"
+          - "railties"
+      solid-stack:
+        applies-to: version-updates
+        patterns:
+          - "solid_*"
+      test-stack:
+        applies-to: version-updates
+        patterns:
+          - "rspec*"
+          - "factory_bot*"
+          - "faker"
+          - "shoulda-matchers"
+          - "capybara"
+          - "selenium-webdriver"
+          - "database_cleaner*"
+          - "webmock"
+          - "vcr"
+          - "rails-controller-testing"
+          - "rspec-benchmark"
+          - "simplecov*"
+          - "timecop"
+      dev-tooling:
+        applies-to: version-updates
+        patterns:
+          - "rubocop*"
+          - "brakeman"
+          - "bundler-audit"
+          - "debug"
+          - "web-console"
+          - "annotaterb"
+          - "letter_opener"
+          - "bullet"
+          - "rack-mini-profiler"
+          - "memory_profiler"
+          - "flamegraph"
+          - "stackprof"
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 3
+    groups:
+      actions-all:
+        applies-to: version-updates
+        patterns:
+          - "*"
