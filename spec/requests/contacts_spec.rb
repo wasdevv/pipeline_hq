@@ -16,5 +16,5 @@ RSpec.describe "Contacts", type: :request do
     end
   end
 
-  it_behaves_like "a standard scaffold", model: Contact, factory: :contact, attribute_path: "contacts"
+  it_behaves_like "a standard scaffold", model: Contact, factory: :contact, attribute_path: "contacts", invalid_attribute: :account_id
 end

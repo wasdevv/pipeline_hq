@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-RSpec.shared_examples "a standard scaffold" do |model:, factory:, attribute_path:|
+RSpec.shared_examples "a standard scaffold" do |model:, factory:, attribute_path:, invalid_attribute: nil|
   let(:record)       { create(factory) }
   let(:resource_key) { attribute_path.singularize.to_sym }
   let(:index_path)   { send("#{attribute_path}_path") }
@@ -43,5 +43,49 @@ RSpec.shared_examples "a standard scaffold" do |model:, factory:, attribute_path
   it "DELETE destroy removes the record" do
     record
     expect { delete show_path }.to change(model, :count).by(-1)
+  end
+
+  it "POST create as JSON returns 201" do
+    post index_path,
+         params:  { resource_key => create_params }.to_json,
+         headers: { "Content-Type" => "application/json", "Accept" => "application/json" }
+    expect(response).to have_http_status(:created)
+  end
+
+  it "PATCH update as JSON returns 200" do
+    patch show_path,
+          params:  { resource_key => update_params }.to_json,
+          headers: { "Content-Type" => "application/json", "Accept" => "application/json" }
+    expect(response).to have_http_status(:ok)
+  end
+
+  if invalid_attribute
+    it "POST create as HTML re-renders with 422 when invalid" do
+      bad = create_params.merge(invalid_attribute => nil)
+      post index_path, params: { resource_key => bad }
+      expect(response).to have_http_status(:unprocessable_content)
+    end
+
+    it "PATCH update as HTML re-renders with 422 when invalid" do
+      bad = update_params.merge(invalid_attribute => nil)
+      patch show_path, params: { resource_key => bad }
+      expect(response).to have_http_status(:unprocessable_content)
+    end
+
+    it "POST create as JSON returns 422" do
+      bad = create_params.merge(invalid_attribute => nil)
+      post index_path,
+           params:  { resource_key => bad }.to_json,
+           headers: { "Content-Type" => "application/json", "Accept" => "application/json" }
+      expect(response).to have_http_status(:unprocessable_content)
+    end
+
+    it "PATCH update as JSON returns 422" do
+      bad = update_params.merge(invalid_attribute => nil)
+      patch show_path,
+            params:  { resource_key => bad }.to_json,
+            headers: { "Content-Type" => "application/json", "Accept" => "application/json" }
+      expect(response).to have_http_status(:unprocessable_content)
+    end
   end
 end

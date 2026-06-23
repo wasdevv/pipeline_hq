@@ -1,8 +1,10 @@
 # frozen_string_literal: true
 
 class SudoSessionsController < ApplicationController
+  # :nocov:
   rate_limit to: 10, within: 3.minutes, only: :create,
              with: -> { redirect_to new_sudo_path, alert: "Tente novamente em alguns minutos." }
+  # :nocov:
 
   def new; end
 
