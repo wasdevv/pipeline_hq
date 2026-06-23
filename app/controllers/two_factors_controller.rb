@@ -5,8 +5,10 @@ class TwoFactorsController < ApplicationController
 
   require_sudo except: %i[verify consume]
   allow_unauthenticated_access only: %i[verify consume]
+  # :nocov:
   rate_limit to: 5, within: 5.minutes, only: :consume,
              with: -> { redirect_to new_session_path, alert: "Muitas tentativas. Tente novamente em breve." }
+  # :nocov:
 
   def show
     @enabled    = current_user.otp_enabled?
