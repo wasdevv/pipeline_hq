@@ -13,12 +13,8 @@ RSpec.describe TwoFactor::RegenerateBackupCodes do
       end
     end
 
-    let(:original_hash) { BCrypt::Password.create("old-code").to_s }
-    let(:user) do
-      u = create(:user, :with_2fa)
-      u.update!(otp_backup_codes: [ original_hash ])
-      u
-    end
+    let(:user)           { create(:user, :with_2fa, :with_backup_codes, plain_codes: [ "old-code" ]) }
+    let(:original_hashes) { user.otp_backup_codes.dup }
 
     it_behaves_like "a successful Result", code: :regenerated
 
@@ -29,11 +25,12 @@ RSpec.describe TwoFactor::RegenerateBackupCodes do
     end
 
     it "replaces the existing backup codes with new bcrypt hashes" do
+      original_hashes
       result
       stored = user.reload.otp_backup_codes
 
       expect(stored.size).to eq(User::BACKUP_CODE_COUNT)
-      expect(stored).not_to include(original_hash)
+      expect(stored & original_hashes).to be_empty
       expect(stored.first).to start_with("$2")
     end
 
