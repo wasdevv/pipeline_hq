@@ -7,13 +7,13 @@
 
 O ADR 0001 fixou a decisão de usar o gerador nativo de autenticação do Rails 8 em vez de Devise. O gerador entrega apenas o básico: model `User` com `has_secure_password`, `Session` DB-backed, password reset por token assinado e a macro `rate_limit` no controller. Tudo o mais — confirmação de email, lockout, 2FA, audit, gestão de sessões ativas, sudo mode, rate limit cross-process — é responsabilidade do app.
 
-Para o PipelineHQ ser **production-ready 2026** (e defensável em review de segurança e em entrevista técnica), precisamos defesa em profundidade. A premissa de design é: **nenhuma camada sozinha é suficiente; o conjunto é**. Se um atacante quebra rate limit, o lockout segura; se passa do lockout, 2FA segura; se passa de 2FA, o audit log denuncia.
+Para o PipelineHQ ser **production-ready 2026** (defensável em qualquer review de segurança séria), precisamos defesa em profundidade. A premissa de design é: **nenhuma camada sozinha é suficiente; o conjunto é**. Se um atacante quebra rate limit, o lockout segura; se passa do lockout, 2FA segura; se passa de 2FA, o audit log denuncia.
 
 Restrições adicionais do projeto:
 
 - **Sem Redis.** Decisão arquitetural do projeto (ortodoxia Rails 8: Solid Queue/Cache/Cable). Toda infra de rate limit, cache, fila precisa rodar em PG.
 - **Sem equipe.** Cada arquivo é manutenção própria — escopo precisa ser fechado e bem testado, não aberto e ambicioso.
-- **Portfólio sênior.** As camadas precisam ser legíveis em isolado (cada uma é um "capítulo" demonstrável em entrevista).
+- **Portfólio.** As camadas precisam ser legíveis em isolado (cada uma é um "capítulo" demonstrável).
 
 ## Decisão
 
@@ -40,7 +40,7 @@ Implementar **10 camadas de hardening** sobre a auth nativa do Rails 8, todas em
 - **Audit log dá observabilidade real** — `AuthEvent` responde "esse login veio de onde?" e "essa conta foi locada quando?" sem grep em log de aplicação. GIN index em jsonb permite query por payload arbitrário (ex.: "todos os eventos com `failure_reason: 'invalid_otp'` nos últimos 7d").
 - **Active Record Encryption no `otp_secret`** garante que vazamento de dump de DB não compromete 2FA dos usuários.
 - **Pwned com fail-open** evita o anti-padrão clássico de "dependência externa derruba meu signup". Timeout curto + fallback para validação local.
-- **Como portfólio, cada camada é um capítulo demonstrável** — em entrevista, dá para abrir um arquivo de cada vez e explicar a decisão de design.
+- **Como portfólio, cada camada é um capítulo demonstrável** — dá para abrir um arquivo de cada vez e explicar a decisão de design em isolado.
 
 ### Ruins / trade-offs
 
@@ -53,7 +53,7 @@ Implementar **10 camadas de hardening** sobre a auth nativa do Rails 8, todas em
 
 ### Alternativas consideradas
 
-- **Não fazer 2FA agora ("MVP de auth, 2FA depois"):** rejeitado. 2FA é diferenciador concreto em portfólio sênior em 2026 e fecha a classe de ataque mais comum hoje (credential stuffing pós-vazamento). Adiar significa enviar PR de auth sem ele, o que enfraquece o capítulo inteiro.
+- **Não fazer 2FA agora ("MVP de auth, 2FA depois"):** rejeitado. 2FA fecha a classe de ataque mais comum hoje (credential stuffing pós-vazamento) e dá um capítulo demonstrável a mais no projeto. Adiar significa enviar PR de auth sem ele, o que enfraquece o capítulo inteiro.
 - **Usar Redis para rate limit (rack-attack padrão):** rejeitado. Redis é dependência operacional não-trivial e contradiz a decisão do projeto de ficar em PG. Solid Cache cobre o caso de uso de rack-attack (TTLs curtos, contadores) sem essa dependência. Se latência virar problema medido, reavaliamos.
 - **WebAuthn / Passkeys em vez de (ou além de) TOTP:** adiado para fase 2. Passkey é o futuro, mas implementar bem dobra o escopo do PR de auth (registro de credencial, autenticação, fallback, UX cross-device) e exige decisões sobre `webauthn-ruby` + Stimulus controllers para a API do browser. Por ora, TOTP cobre a defesa principal; Passkey entra como ADR separado depois.
 - **`devise-two-factor` standalone (sem o resto do Devise):** rejeitado. Acoplado ao Devise; tirar Devise e manter só essa gem é frankenstein. Reimplementar o caso simples de TOTP em `app/services/auth/` é mais limpo e legível que importar uma gem para isso.

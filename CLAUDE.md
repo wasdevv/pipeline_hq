@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Visão geral
 
-**PipelineHQ** é um CRM B2B em Ruby on Rails 8 — pipeline de vendas estilo Pipedrive/HubSpot, sendo construído como projeto de portfólio sênior por um dev em busca de vaga Rails em 2026. O foco é **sinalizar fluência em Rails 8 moderno + decisões deliberadas + segurança real**, não cobertura de features.
+**PipelineHQ** é um CRM B2B em Ruby on Rails 8 — pipeline de vendas estilo Pipedrive/HubSpot, construído como projeto de portfólio. O foco é **explorar Rails 8 moderno com decisões deliberadas e segurança real**, não cobertura de features.
 
 **Estado em 2026-06-18:**
 - Auth nativa Rails 8 + 10 camadas de hardening: completa, funcionando end-to-end, ~38 arquivos.
@@ -130,7 +130,7 @@ bin/rails server
 - `sessions`: user_id, ip_address, user_agent, last_active_at, sudo_until, otp_verified_at.
 - `auth_events`: user_id (nullable), email_address, kind (frozen list), ip_address, user_agent, metadata (jsonb, GIN-indexed), created_at.
 
-**Índices**: parciais em users (`locked_at WHERE NOT NULL`, `confirmed_at WHERE NULL`), composto em sessions (`user_id, last_active_at`), 4 em auth_events (incluindo GIN no metadata). Todos criados em **migrations separadas** com `disable_ddl_transaction!` + `algorithm: :concurrently` (padrão sênior, mesmo em tabela vazia).
+**Índices**: parciais em users (`locked_at WHERE NOT NULL`, `confirmed_at WHERE NULL`), composto em sessions (`user_id, last_active_at`), 4 em auth_events (incluindo GIN no metadata). Todos criados em **migrations separadas** com `disable_ddl_transaction!` + `algorithm: :concurrently` (padrão idiomático, mesmo em tabela vazia).
 
 **Cookie de sessão**: `httponly: true, secure: Rails.env.production?, same_site: :lax`.
 

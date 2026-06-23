@@ -23,6 +23,6 @@ Use Devise quando o time é pequeno, o produto não tem requisito de auth difere
 
 Use auth nativa quando o produto **tem** requisito de auth diferenciado (multi-tenant com SSO custom, 2FA obrigatório, audit log fino, sessões revogáveis com UI), o time vai manter o código a longo prazo, e você prefere pagar o custo de implementar pra ter visibilidade total em troca.
 
-No PipelineHQ a escolha foi a segunda — porque o projeto é portfólio sênior e o ponto é justamente mostrar essa leitura. Em produto comercial com prazo apertado, eu provavelmente usaria Devise.
+No PipelineHQ a escolha foi a segunda — porque é um projeto de portfólio e o ponto é justamente mostrar essa leitura. Em produto comercial com prazo apertado, eu provavelmente usaria Devise.
 
 ADR completo com alternativas consideradas (Devise + Devise-Security, Rodauth) em `<repo-url>`.
