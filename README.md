@@ -79,12 +79,39 @@ bin/jobs
 
 ## Decisões de arquitetura
 
-ADRs vivem em `docs/adr/`. As duas decisões fundacionais hoje:
+ADRs vivem em `docs/adr/`. Decisões fundacionais até aqui:
 
 - [ADR 0001 — Auth nativa do Rails 8 em vez de Devise](docs/adr/0001-auth-nativa-rails-8.md)
 - [ADR 0002 — 10 camadas de hardening sobre a auth nativa](docs/adr/0002-camadas-hardening-auth.md)
+- [ADR 0003 — Deploy via Kamal 2 em Oracle Cloud Always Free (ARM)](docs/adr/0003-deploy-kamal-oracle-arm.md)
 
-Novas decisões transversais (multi-tenancy, framework de testes, engine de escalação, IA) entram como ADRs incrementais antes da implementação.
+Novas decisões transversais (multi-tenancy, engine de escalação, IA) entram como ADRs incrementais antes da implementação.
+
+## Deploy
+
+Stack: Kamal 2 + Docker + Postgres em accessory container + kamal-proxy com SSL automático via Let's Encrypt.
+
+Pré-requisitos para deployar:
+
+```bash
+export PIPELINE_HQ_POSTGRES_PASSWORD="<senha forte do PG production>"
+export PIPELINE_HQ_AR_PRIMARY_KEY="<chave 32+ chars>"
+export PIPELINE_HQ_AR_DETERMINISTIC_KEY="<chave 32+ chars>"
+export PIPELINE_HQ_AR_SALT="<chave 32+ chars>"
+# gh CLI precisa estar autenticado (Kamal lê via `gh auth token` em .kamal/secrets)
+```
+
+Edite `config/deploy.yml` substituindo `<ORACLE_VM_PUBLIC_IP>` pelo IP da VM e `<YOUR_DOMAIN>` pelo domínio apontado.
+
+```bash
+bin/kamal setup            # primeira vez: instala Docker, sobe PG, deploya web
+bin/kamal app exec "bin/rails db:prepare"
+bin/kamal deploy           # deploys subsequentes
+bin/kamal logs             # tail dos logs do app
+bin/kamal app exec --interactive --reuse "bin/rails console"
+```
+
+Detalhes completos do trade-off Oracle vs DO vs Hetzner vs Railway em [ADR 0003](docs/adr/0003-deploy-kamal-oracle-arm.md).
 
 ## Roadmap
 
@@ -92,8 +119,8 @@ Novas decisões transversais (multi-tenancy, framework de testes, engine de esca
 - Pipeline kanban com Turbo Streams + Stimulus para drag-and-drop entre stages.
 - Engine de escalação — `EscalationRule` + job recorrente em Solid Queue.
 - IA copiloto em `app/services/ai/` — lead scoring e draft de email via Claude API.
-- Framework de testes (Minitest omakase) + cobertura mínima por feature (regra 29).
-- Deploy Kamal 2 em VPS único, sem orquestrador externo.
+- ~~Framework de testes (RSpec) + cobertura mínima por feature (regra 29).~~ Pronto — 352 examples, 100% line coverage.
+- ~~Deploy Kamal 2 em VPS único, sem orquestrador externo.~~ Pronto — config pra Oracle ARM, ADR 0003.
 
 ## Estrutura de diretórios
 
