@@ -122,7 +122,6 @@ RSpec.describe "TwoFactors", type: :request do
         expect(flash[:alert]).to include("Código inválido")
       end
     end
-
   end
 
   describe "DELETE /two_factor" do

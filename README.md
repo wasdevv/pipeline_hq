@@ -8,6 +8,10 @@ O projeto existe pra explorar uma pergunta concreta: "como arquitetar um SaaS em
 ![Rails 8.1.3](https://img.shields.io/badge/rails-8.1.3-CC0000)
 ![License MIT](https://img.shields.io/badge/license-MIT-green)
 
+## CI
+
+Cada PR roda automaticamente: `brakeman`, `bundler-audit`, `importmap audit` e `rubocop`. A suite RSpec completa é opt-in via label: adicione **`CI:full`** ao PR para disparar `bundle exec rspec` com Postgres como service container. Push em `main` sempre roda a suite completa.
+
 ## Status
 
 Em construção (junho/2026). Auth completa com 10 camadas de hardening; CRM em fase scaffold (Account, Contact, Stage, Deal, Activity gerados, relacionamentos pendentes).
