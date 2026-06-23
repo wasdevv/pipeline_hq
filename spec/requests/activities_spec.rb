@@ -24,5 +24,5 @@ RSpec.describe "Activities", type: :request do
     end
   end
 
-  it_behaves_like "a standard scaffold", model: Activity, factory: :activity, attribute_path: "activities"
+  it_behaves_like "a standard scaffold", model: Activity, factory: :activity, attribute_path: "activities", invalid_attribute: :deal_id
 end

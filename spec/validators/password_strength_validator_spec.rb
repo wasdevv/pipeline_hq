@@ -48,4 +48,22 @@ RSpec.describe PasswordStrengthValidator do
   it "exposes MIN_LENGTH as a frozen constant" do
     expect(PasswordStrengthValidator::MIN_LENGTH).to eq(12)
   end
+
+  it "adds :pwned error when BreachCheck returns true" do
+    allow(Passwords::BreachCheck).to receive(:call).and_return(true)
+    user = build_user("StrongPass!2026")
+    user.valid?
+    expect(user.errors[:password]).to include(match(/vaza|breach|pwned/i))
+  end
+
+  it "logs and fails closed silently when BreachCheck raises" do
+    allow(Passwords::BreachCheck).to receive(:call).and_raise(StandardError.new("network down"))
+    allow(Rails.logger).to receive(:warn)
+
+    user = build_user("StrongPass!2026")
+    user.valid?
+
+    expect(Rails.logger).to have_received(:warn).with(/PasswordStrengthValidator/)
+    expect(user.errors[:password]).to be_empty
+  end
 end

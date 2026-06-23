@@ -16,4 +16,38 @@ RSpec.describe "Accounts", type: :request do
   end
 
   it_behaves_like "a standard scaffold", model: Account, factory: :account, attribute_path: "accounts"
+
+  context "when persistence fails" do
+    before { allow_any_instance_of(Account).to receive(:save).and_return(false) }
+
+    it "POST create re-renders the form with 422 (html)" do
+      post accounts_path, params: { account: create_params }
+      expect(response).to have_http_status(:unprocessable_content)
+    end
+
+    it "POST create returns 422 (json)" do
+      post accounts_path,
+           params:  { account: create_params }.to_json,
+           headers: { "Content-Type" => "application/json", "Accept" => "application/json" }
+      expect(response).to have_http_status(:unprocessable_content)
+    end
+  end
+
+  context "when update fails" do
+    let!(:existing) { create(:account) }
+
+    before { allow_any_instance_of(Account).to receive(:update).and_return(false) }
+
+    it "PATCH update re-renders the form with 422 (html)" do
+      patch account_path(existing), params: { account: update_params }
+      expect(response).to have_http_status(:unprocessable_content)
+    end
+
+    it "PATCH update returns 422 (json)" do
+      patch account_path(existing),
+            params:  { account: update_params }.to_json,
+            headers: { "Content-Type" => "application/json", "Accept" => "application/json" }
+      expect(response).to have_http_status(:unprocessable_content)
+    end
+  end
 end
