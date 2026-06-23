@@ -6,12 +6,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **PipelineHQ** é um CRM B2B em Ruby on Rails 8 — pipeline de vendas estilo Pipedrive/HubSpot, construído como projeto de portfólio. O foco é **explorar Rails 8 moderno com decisões deliberadas e segurança real**, não cobertura de features.
 
-**Estado em 2026-06-18:**
+**Estado em 2026-06-23:**
 - Auth nativa Rails 8 + 10 camadas de hardening: completa, funcionando end-to-end, ~38 arquivos.
 - UI: split-screen no login (estilo Linear/Vercel) + toggle de tema dark/light com anti-flash; 6 ViewComponents (AuthShell, AuthHeader, FormField, ButtonPrimary, ButtonSecondary, NavCard).
 - 5 scaffolds CRM (Account/Contact/Stage/Deal/Activity) gerados mas SEM relacionamentos `has_many` e SEM multi-tenancy ainda.
-- Sem framework de testes instalado (decisão: RSpec, setup pendente).
-- 2 ADRs em `docs/adr/` + 4 posts LinkedIn em `posts/` prontos.
+- **RSpec instalado e configurado**, 352 examples, 0 failures, **100% line coverage** / 93.4% branch.
+- CI: GH Actions com `scan_ruby` + `scan_js` + `lint` em todo PR; suite RSpec completa só com label **`CI:full`** (sempre roda em push pra main).
+- **Subagents LOOPS pipeline em vigor** (13 agents em `.claude/agents/`, ver seção "Workflow").
+- Deploy: config Kamal 2 pronta em `config/deploy.yml` (PR #28 aberto), target Oracle Cloud Always Free ARM SP. VM ainda não provisionada.
+- 3 ADRs em `docs/adr/` (auth nativa, hardening, deploy) + 4 posts LinkedIn em `posts/`.
 
 ## Stack
 
@@ -222,18 +225,54 @@ db/
 
 docs/adr/
 ├── 0001-auth-nativa-rails-8.md
-└── 0002-camadas-hardening-auth.md
+├── 0002-camadas-hardening-auth.md
+└── 0003-deploy-kamal-oracle-arm.md
 
-posts/                                 # 4 posts LinkedIn (anúncio + 3 seguimento)
+posts/                                 # 4+ posts LinkedIn
 
 spec/
-├── config_spec.rb                  # smoke: env, locale, factory, WebMock
-├── factories/users.rb              # :user + traits :unconfirmed, :locked, :with_2fa
-├── rails_helper.rb                 # FactoryBot, Shoulda, DatabaseCleaner, WebMock
+├── config_spec.rb                  # smoke: env, locale, factory, VCR
+├── factories/{users,crm}.rb        # User + 5 CRM factories
+├── rails_helper.rb                 # FactoryBot, Shoulda, DatabaseCleaner, WebMock, ViewComponent::TestHelpers
 ├── spec_helper.rb                  # SimpleCov no topo (branch coverage)
-└── support/passwords.rb            # stub global Passwords::BreachCheck
+├── support/
+│   ├── authentication_helpers.rb   # sign_in_as, confirm_email_for, lock_out, TEST_PASSWORD
+│   ├── request_double.rb           # request struct + shared_context
+│   ├── shared_examples/
+│   │   ├── result_object.rb        # "a successful/failed Result"
+│   │   └── standard_scaffold.rb    # CRUD smoke pra 5 scaffolds CRM
+│   └── vcr.rb                      # cassette compartilhado pra Pwned
+├── cassettes/shared/pwned_breach_check.yml  # gravado, replay com record: :none
+├── models/{user,session,auth_event}_spec.rb
+├── services/                       # 16 services cobertos (users, sessions, two_factor, passwords, auth_events)
+├── requests/                       # 10 controllers cobertos
+├── components/                     # 6 ViewComponents cobertos
+├── mailers/                        # ConfirmationsMailer + PasswordsMailer
+├── validators/password_strength_validator_spec.rb
+├── jobs/auth_event_job_spec.rb
+├── channels/application_cable/connection_spec.rb
+└── system/auth_flow_spec.rb        # E2E happy path completo
 
-.claude/agents/                        # 10 subagents project-level (coordinator, planner, architect, rails-engineer, frontend-engineer, data-agent, tester, reviewer, writer, summariser)
+.github/workflows/ci.yml             # scan_ruby + scan_js + lint sempre; test job só em push pra main OU label CI:full
+
+config/deploy.yml                    # Kamal 2 — Oracle ARM + GHCR + Postgres accessory + SSL proxy (PR #28)
+
+.claude/agents/                      # 13 subagents (LOOPS pipeline)
+├── coordinator.md   (opus,    white)   # hub Discover/Plan/Execute/Verify/Iterate/Close
+├── planner.md       (opus,    cyan)
+├── architect.md     (opus,    blue)
+├── rails-engineer.md(sonnet,  red)
+├── frontend-engineer.md (sonnet, pink)
+├── data-agent.md    (sonnet,  yellow)
+├── tester.md        (sonnet,  green)
+├── reviewer.md      (sonnet,  orange)
+├── verifier.md      (sonnet,  teal)    # NOVO: gate PASS/ITERATE/FAIL
+├── iterator.md      (opus,    amber)   # NOVO: loop guard 3x / 200k
+├── writer.md        (sonnet,  purple)
+├── summariser.md    (haiku,   gray)
+└── agent-builder.md (opus,    magenta) # NOVO: cria agent novo
+
+tmp/scratch/<task_id>/                # state-passing entre agents na mesma feature
 ```
 
 ## Seed / credenciais demo
@@ -376,6 +415,35 @@ Quando aparecer **domínio recorrente** sem especialista (ex.: AI engineer pra `
 ## Bloqueios / Próximo passo sugerido
 ```
 
+### Disciplina de custo / routing por task type
+
+Princípio: **default ao modelo mais barato que ainda entrega**; escala pra Opus só quando a decisão é alto-impacto e dificilmente reversível. Mesmo princípio do post de routing Kimi/Opus (ver Twitter), aplicado **dentro do roster Anthropic** que o Claude Code expõe.
+
+| Modelo | Quando |
+|---|---|
+| **Haiku 4.5** | Compressão/formatação trivial (`summariser`), syntax-only fixes, lookups em arquivos conhecidos |
+| **Sonnet 4.6** | **Default pra implementação e revisão** (engineers, tester, reviewer, verifier, writer). 80% do trabalho do projeto |
+| **Opus 4.7** | Decisão arquitetural alto-impacto (planner, architect, coordinator hub, iterator escalando, agent-builder criando especialista novo) |
+
+**Sinais pra escalar pra Opus**:
+- Decisão custaria meses de dívida técnica se errada (multi-tenancy strategy, schema fundacional)
+- Requirements ambíguos que precisam reasoning real, não execução
+- Final review de feature security-critical antes de ship
+- Iterator decidindo ESCALATE depois de 2 loops sem convergência
+
+**Sinais pra ficar em Sonnet (não escalar)**:
+- Implementação a partir de design já fechado pelo architect
+- Reviewer enforçando regras objetivas (30 golden rules têm critério claro)
+- Tester escrevendo specs pra service com Result já desenhado
+- Writer fazendo README/ADR/PR description a partir de feature pronta
+
+**Sinais pra cair pra Haiku** (raro mas vale):
+- `summariser` condensando > 2k tokens em formato fixo
+- Reviewer fazendo segunda passada só pra confirmar uma regra específica
+- Lookup de paths num diretório conhecido (ex: "lista os specs em spec/services/")
+
+**Cost cap por feature: 200k tokens cumulativos.** Coordinator soma os caps no Discover; iterator escala se passar. Não tem TUDO em Opus, e não tem TUDO em Sonnet — tem o agent certo no modelo certo, com Verify obrigatório antes de Close.
+
 ### Quando spawnar agents vs fazer inline
 
 - **Inline (eu mesmo)**: edits triviais (1-3 arquivos), correções pontuais reportadas por reviewer, smoke tests, fixes de typo/lint.
@@ -390,12 +458,12 @@ Em `/home/was/projetos/.claude/settings.local.json`. Liberado por padrão: rbenv
 
 ## Roadmap atual (prioridade decrescente)
 
-1. **Specs críticos da auth** — setup RSpec/SimpleCov/DatabaseCleaner pronto e verde (smoke). Falta cobrir `Users::Register` (paths do Result + honeypot), `Sessions::SignIn` (5 caminhos), `TwoFactor::Verify` (TOTP + backup code), 1 system test ponta-a-ponta (signup → confirm → login → 2FA enroll → verify). **Bloqueador antes de deploy** (auth sem testes = CVE territory).
-2. **Multi-tenancy** — model `Workspace`, `workspace_memberships`, scoping por `current_workspace` (concern), migrar todos os models CRM para `belongs_to :workspace`. Reviewer flagou como dívida em todos os controllers atuais.
-3. **CRM real (kanban)** — relacionamentos `has_many` nos models, kanban Hotwire com Turbo Streams drag-and-drop em real-time.
-4. **IA copiloto** — `app/services/ai/` com Claude API: lead scoring + draft de email contextual.
+1. ✅ **Specs críticos da auth** — DONE. 352 examples, 100% line coverage. Foundation, services, controllers, components, mailers, channels todos cobertos.
+2. **Multi-tenancy + audit domain** — model `Workspace`, `workspace_memberships` com role enum, scoping por `current_workspace` (concern), Pundit policies, `DomainEvents::Record` reusando pattern do `AuthEvent`. **2 PRs em sequência** pra caber no cost cap de 200k tokens/feature. Reviewer flagou scoping como dívida em todos os controllers atuais.
+3. **CRM real (kanban)** — relacionamentos `has_many` nos models, kanban Hotwire com Turbo Streams drag-and-drop em real-time. Depende de #2.
+4. **IA copiloto** — `app/services/ai/` com Claude API: lead scoring + draft de email contextual. Possível criar agent `ai-engineer` via `agent-builder` pra separar de `rails-engineer`.
 5. **Engine de escalação** — model `EscalationRule` + job recorrente Solid Queue + notificação (Slack/email).
-6. **Deploy Kamal 2** em VPS Hetzner — config `force_ssl = true`, GIF da demo no README, link público.
+6. **Deploy Kamal 2** em Oracle Cloud Always Free SP — PR #28 com config pronta. Falta provisionar VM (gargalo de capacidade ARM em SP, pode levar dias). Ver ADR 0003.
 
 ## Dívidas conhecidas (do reviewer, não-bloqueantes pra portfólio mas devem ser endereçadas)
 
@@ -444,14 +512,17 @@ rm -f tmp/pids/server.pid
 
 ## Knowledge base externo
 
-Além deste arquivo, contexto persistente do **usuário** (não do projeto) vive em `~/.claude/projects/-home-was-projetos/memory/MEMORY.md` — Claude Code carrega automaticamente. Contém:
-- `user_role.md` — dev Rails 8, pt-BR
-- `project_job_hunt_2026.md` — rescisão junho/2026, busca ativa vaga Rails
-- `project_pipelinehq_decisions.md` — stack/auth/UI/RSpec travados aqui
-- `feedback_senior_design_first.md` — desenhar arquitetura + edge cases ANTES de codar em features ≥ moderadas
+Além deste arquivo, contexto persistente do **usuário** (não do projeto) vive em `~/.claude/projects/-home-was-projetos-pipeline-hq/memory/MEMORY.md` — Claude Code carrega automaticamente. Contém:
+- `feedback_english_code_ptbr_ui.md` — código em inglês, UI em pt-BR, zero comentários no código
+- `feedback_branch_pr_workflow.md` — toda mudança vai por branch + PR, nunca direto na main
+- `feedback_no_senior_framing.md` — drop "sênior" qualifier em docs/ADRs/posts/personas; só "projeto de portfólio"
 
-ADRs do projeto em `docs/adr/0001-auth-nativa-rails-8.md` e `0002-camadas-hardening-auth.md`.
-Posts LinkedIn em `posts/01-04-*.md`.
+ADRs do projeto:
+- `docs/adr/0001-auth-nativa-rails-8.md`
+- `docs/adr/0002-camadas-hardening-auth.md`
+- `docs/adr/0003-deploy-kamal-oracle-arm.md`
+
+Posts LinkedIn em `posts/`.
 
 ## Lições aprendidas
 
@@ -478,3 +549,25 @@ Posts LinkedIn em `posts/01-04-*.md`.
 - **rails-i18n + `config.i18n.default_locale = :"pt-BR"`** zera o trabalho manual de traduzir Active Record errors, helpers de data, e number formatting. AR/validations falavam inglês em flash messages antes; agora respeitam locale.
 - **Selenium Manager nativo no Rails 8** = `selenium-webdriver` sem gem `webdrivers`. Driver baixa automático no primeiro `headless_chrome` request. Menos gem, menos manutenção.
 - **rack-mini-profiler com FileStore em `tmp/miniprofiler`** evita dependência de Redis em dev. Badge no top-left mostra SQL + render time por request — fica o sinal visual constante de regressão de performance.
+
+### Feature: VCR cassette no lugar de stub global (2026-06-19)
+- **Stub global de service mata o fluxo real em CI**. Cassette VCR gravando 1x contra HIBP + replay com `record: :none` mantém o validator + breach_check de produção exercidos em todo spec, sem rede. `VCR_RECORD=1` re-grava quando precisar.
+- **`around(:each)` com cassette compartilhado** vence over `before { stub }` pra services chamados em factory: o stub vaza pro spec dedicado do próprio service, o cassette não.
+
+### Feature: 100% line coverage (2026-06-22)
+- **Branch coverage ≠ line coverage no `respond_to do |format|`**: assertions HTML + JSON em todos os casos cobre os 2 branches. Sem isso o SimpleCov mostra a linha verde mas a métrica de branch fica em 50%.
+- **`:nocov:` ao redor de `rate_limit` lambda**: lambda só executa após 11+ requests no mesmo bucket — caro e flaky de testar. Usar `# :nocov:` documenta a exclusão intencional. A declaração do `rate_limit` continua coberta (executa em class-load).
+- **Active Record Encryption via ENV em CI**: cria `config/initializers/active_record_encryption.rb` que prefere ENV vars (`ACTIVE_RECORD_ENCRYPTION_*`) se setadas, fallback pra credentials. Permite CI rodar sem `RAILS_MASTER_KEY` nem `config/credentials/test.key`.
+- **Allow_any_instance_of pra save → false**: cobrir branches de unprocessable em controllers de scaffold cujo model não tem validações (`Account`, `Stage`) — sem alterar produção, mock minimal pra exercitar o else branch.
+
+### Feature: framing cleanup (2026-06-20)
+- **Branch nova SEM exceção, mesmo pra doc-only**: regra de memória "branch + PR sempre" não tem exceção pra mudança pequena. Compromisso de fluxo > "isso aqui é trivial".
+- **Reviewer cita pelo grep**: `grep -rni "s[eê]nior\|em entrevista\|busca de vaga"` no projeto inteiro é a heurística pro reviewer detectar framing residual. Cheaper than full read.
+
+### Feature: agents LOOPS pipeline upgrade (2026-06-23)
+- **Verifier unificado fecha gap de "tester verde + reviewer com hard blocker = pass cedo"**: coordinator nunca mais decide PASS sozinho. Sempre passa por `verifier` que roda rspec + rubocop independente e cita o veredito em formato fixo (`PASS | ITERATE | FAIL`).
+- **Iterator com cap (3 loops, 200k tokens) previne runaway retry**: convergence check exige fechar pelo menos 1 finding por ciclo, senão escala. Sem o iterator, fluxo "fix → verify → fix" sem fim queima tokens.
+- **State-passing por `tmp/scratch/<task_id>/<agent>.md`**: cada agent escreve só seu arquivo. Próximo agent lê os anteriores. Elimina re-derive de contexto cold-start em paralelo de Tasks.
+- **agent-builder vira "meta" do roster**: quando aparece domínio recorrente (ex.: `ai-engineer` pra `app/services/ai/`), spec curta vira agent novo seguindo o padrão (frontmatter completo + LOOPS protocol + cor única). Roster fica crescível sem inflar coordinator.
+- **Color field no frontmatter** ajuda visualização no Claude Code (chip colorido por agente). 13 cores distintas no roster atual; agent-builder consulta lista antes de assignar.
+- **Squash merge em stack profunda**: cherry-pick + force-push é o caminho seguro quando a base de PR é deletada após merge. Fazer linear (de-cherry-pick + reset hard pra main + cherry-pick só o commit único + force-push) evita "merge conflict" no GitHub vindo de fix-ups upstream que reescreveram histórico.
