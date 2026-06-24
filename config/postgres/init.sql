@@ -1,0 +1,3 @@
+CREATE DATABASE pipeline_hq_production_cache OWNER pipeline_hq;
+CREATE DATABASE pipeline_hq_production_queue OWNER pipeline_hq;
+CREATE DATABASE pipeline_hq_production_cable OWNER pipeline_hq;
