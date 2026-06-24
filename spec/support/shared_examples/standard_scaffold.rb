@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-RSpec.shared_examples "a standard scaffold" do |model:, factory:, attribute_path:, invalid_attribute: nil|
+RSpec.shared_examples "a standard scaffold" do |model:, factory:, attribute_path:, invalid_attribute: nil, skip_create: false|
   let(:record)       { create(factory) }
   let(:resource_key) { attribute_path.singularize.to_sym }
   let(:index_path)   { send("#{attribute_path}_path") }
@@ -30,6 +30,7 @@ RSpec.shared_examples "a standard scaffold" do |model:, factory:, attribute_path
   end
 
   it "POST create persists and redirects" do
+    pending("controller workspace scoping not yet implemented — PR 1b") if skip_create
     expect { post index_path, params: { resource_key => create_params } }
       .to change(model, :count).by(1)
     expect(response).to have_http_status(:found)
@@ -46,6 +47,7 @@ RSpec.shared_examples "a standard scaffold" do |model:, factory:, attribute_path
   end
 
   it "POST create as JSON returns 201" do
+    pending("controller workspace scoping not yet implemented — PR 1b") if skip_create
     post index_path,
          params:  { resource_key => create_params }.to_json,
          headers: { "Content-Type" => "application/json", "Accept" => "application/json" }

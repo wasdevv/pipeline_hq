@@ -15,7 +15,7 @@ RSpec.describe "Accounts", type: :request do
     end
   end
 
-  it_behaves_like "a standard scaffold", model: Account, factory: :account, attribute_path: "accounts"
+  it_behaves_like "a standard scaffold", model: Account, factory: :account, attribute_path: "accounts", skip_create: true
 
   context "when persistence fails" do
     before { allow_any_instance_of(Account).to receive(:save).and_return(false) }

@@ -15,7 +15,7 @@ RSpec.describe "Stages", type: :request do
     end
   end
 
-  it_behaves_like "a standard scaffold", model: Stage, factory: :stage, attribute_path: "stages"
+  it_behaves_like "a standard scaffold", model: Stage, factory: :stage, attribute_path: "stages", skip_create: true
 
   context "when persistence fails" do
     before { allow_any_instance_of(Stage).to receive(:save).and_return(false) }

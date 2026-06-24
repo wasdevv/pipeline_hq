@@ -42,3 +42,4 @@
 /coverage
 /spec/examples.txt
 /.claude
+tmp/scratch/

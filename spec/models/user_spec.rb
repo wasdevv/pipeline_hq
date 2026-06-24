@@ -6,6 +6,11 @@ RSpec.describe User, type: :model do
   describe "associations" do
     it { is_expected.to have_many(:sessions).dependent(:destroy) }
     it { is_expected.to have_many(:auth_events).dependent(:nullify).inverse_of(:user) }
+
+    it { is_expected.to have_many(:workspace_memberships).dependent(:destroy).inverse_of(:user) }
+    it { is_expected.to have_many(:workspaces).through(:workspace_memberships) }
+    it { is_expected.to have_many(:owned_workspaces).class_name("Workspace").dependent(:restrict_with_error) }
+    it { is_expected.to belong_to(:current_workspace).class_name("Workspace").optional }
   end
 
   describe "validations" do
