@@ -84,6 +84,13 @@ RSpec.describe Workspaces::Create do
         expect { result rescue nil }.not_to change { Workspace.count }
         expect(Workspace.count).to eq(baseline)
       end
+
+      it "returns :slug_taken when a concurrent insert raises RecordNotUnique" do
+        allow_any_instance_of(Workspace).to receive(:save).and_raise(ActiveRecord::RecordNotUnique)
+
+        expect(result).to be_failure
+        expect(result.code).to eq(:slug_taken)
+      end
     end
   end
 end

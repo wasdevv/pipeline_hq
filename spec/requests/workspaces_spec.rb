@@ -53,12 +53,26 @@ RSpec.describe "Workspaces", type: :request do
     end
   end
 
+  describe "GET /workspaces/:id/edit" do
+    it "renders the edit form" do
+      get edit_workspace_path(workspace)
+      expect(response).to have_http_status(:ok)
+    end
+  end
+
   describe "PATCH /workspaces/:id" do
     it "updates the workspace name and redirects to show" do
       patch workspace_path(workspace), params: { workspace: { name: "Renamed" } }
 
       expect(response).to redirect_to(workspace_path(workspace))
       expect(workspace.reload.name).to eq("Renamed")
+    end
+
+    it "re-renders edit with 422 on invalid params" do
+      patch workspace_path(workspace), params: { workspace: { name: "" } }
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(workspace.reload.name).not_to eq("")
     end
   end
 end
