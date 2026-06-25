@@ -59,6 +59,8 @@ RSpec.configure do |config|
 
   config.append_after(:each) { DatabaseCleaner.clean }
 
+  config.before(:each) { Rails.cache.clear }
+
   config.before(:each, type: :system) { driven_by :rack_test }
   config.before(:each, type: :system, js: true) do
     driven_by :selenium, using: :headless_chrome, screen_size: [ 1400, 1400 ]
