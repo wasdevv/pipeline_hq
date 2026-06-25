@@ -1,31 +1,34 @@
+# frozen_string_literal: true
+
 class DealsController < ApplicationController
-  before_action :set_deal, only: %i[ show edit update destroy ]
+  include WorkspaceScoped
 
-  # GET /deals or /deals.json
+  before_action :set_deal, only: %i[show edit update destroy]
+
   def index
-    @deals = Deal.all
+    @deals = policy_scope(Deal).includes(:account, :stage, :contact).order(created_at: :desc)
   end
 
-  # GET /deals/1 or /deals/1.json
   def show
+    authorize @deal
   end
 
-  # GET /deals/new
   def new
-    @deal = Deal.new
+    @deal = current_workspace.deals.build
+    authorize @deal
   end
 
-  # GET /deals/1/edit
   def edit
+    authorize @deal
   end
 
-  # POST /deals or /deals.json
   def create
-    @deal = Deal.new(deal_params)
+    @deal = current_workspace.deals.build(deal_params)
+    authorize @deal
 
     respond_to do |format|
       if @deal.save
-        format.html { redirect_to @deal, notice: "Deal was successfully created." }
+        format.html { redirect_to @deal, notice: t("deals.created") }
         format.json { render :show, status: :created, location: @deal }
       else
         format.html { render :new, status: :unprocessable_content }
@@ -34,11 +37,12 @@ class DealsController < ApplicationController
     end
   end
 
-  # PATCH/PUT /deals/1 or /deals/1.json
   def update
+    authorize @deal
+
     respond_to do |format|
       if @deal.update(deal_params)
-        format.html { redirect_to @deal, notice: "Deal was successfully updated.", status: :see_other }
+        format.html { redirect_to @deal, notice: t("deals.updated"), status: :see_other }
         format.json { render :show, status: :ok, location: @deal }
       else
         format.html { render :edit, status: :unprocessable_content }
@@ -47,24 +51,23 @@ class DealsController < ApplicationController
     end
   end
 
-  # DELETE /deals/1 or /deals/1.json
   def destroy
+    authorize @deal
     @deal.destroy!
 
     respond_to do |format|
-      format.html { redirect_to deals_path, notice: "Deal was successfully destroyed.", status: :see_other }
+      format.html { redirect_to deals_path, notice: t("deals.destroyed"), status: :see_other }
       format.json { head :no_content }
     end
   end
 
   private
-    # Use callbacks to share common setup or constraints between actions.
-    def set_deal
-      @deal = Deal.find(params.expect(:id))
-    end
 
-    # Only allow a list of trusted parameters through.
-    def deal_params
-      params.expect(deal: [ :title, :account_id, :contact_id, :stage_id, :amount_cents, :currency, :expected_close_on, :status ])
-    end
+  def set_deal
+    @deal = current_workspace.deals.find(params.expect(:id))
+  end
+
+  def deal_params
+    params.expect(deal: [ :title, :account_id, :contact_id, :stage_id, :amount_cents, :currency, :expected_close_on, :status ])
+  end
 end

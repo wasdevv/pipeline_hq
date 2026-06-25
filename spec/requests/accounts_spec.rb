@@ -5,7 +5,8 @@ require "rails_helper"
 RSpec.describe "Accounts", type: :request do
   include ActiveJob::TestHelper
 
-  let(:user) { create(:user) }
+  let(:user)      { create(:user) }
+  let(:workspace) { user.current_workspace }
   let(:create_params) { { name: "New Account", industry: "SaaS", website: "https://x.com", notes: "" } }
   let(:update_params) { { name: "Updated Account", industry: "Fintech", website: "https://y.com", notes: "edit" } }
 
@@ -15,7 +16,13 @@ RSpec.describe "Accounts", type: :request do
     end
   end
 
-  it_behaves_like "a standard scaffold", model: Account, factory: :account, attribute_path: "accounts", skip_create: true
+  it_behaves_like "a standard scaffold",
+    model: Account,
+    factory: :account,
+    attribute_path: "accounts",
+    skip_create: false do
+    let(:record) { create(:account, workspace: workspace) }
+  end
 
   context "when persistence fails" do
     before { allow_any_instance_of(Account).to receive(:save).and_return(false) }
@@ -34,7 +41,7 @@ RSpec.describe "Accounts", type: :request do
   end
 
   context "when update fails" do
-    let!(:existing) { create(:account) }
+    let!(:existing) { create(:account, workspace: workspace) }
 
     before { allow_any_instance_of(Account).to receive(:update).and_return(false) }
 
@@ -48,6 +55,17 @@ RSpec.describe "Accounts", type: :request do
             params:  { account: update_params }.to_json,
             headers: { "Content-Type" => "application/json", "Accept" => "application/json" }
       expect(response).to have_http_status(:unprocessable_content)
+    end
+  end
+
+  context "cross-workspace isolation" do
+    let(:other_user)      { create(:user) }
+    let(:other_workspace) { other_user.current_workspace }
+
+    it "returns 404 when fetching an account from another workspace" do
+      foreign_account = create(:account, workspace: other_workspace)
+      get account_path(foreign_account)
+      expect(response).to have_http_status(:not_found)
     end
   end
 end

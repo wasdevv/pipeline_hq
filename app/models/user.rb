@@ -6,8 +6,10 @@ class User < ApplicationRecord
   BACKUP_CODE_COUNT = 8
 
   has_secure_password
-  has_many :sessions,    dependent: :destroy
-  has_many :auth_events, dependent: :nullify, inverse_of: :user
+  has_many :sessions,      dependent: :destroy
+  has_many :auth_events,   dependent: :nullify, inverse_of: :user
+  has_many :domain_events, class_name: "DomainEvent", foreign_key: :actor_id,
+           dependent: :nullify, inverse_of: :actor
 
   has_many :workspace_memberships, dependent: :destroy, inverse_of: :user
   has_many :workspaces, through: :workspace_memberships

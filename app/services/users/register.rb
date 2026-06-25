@@ -11,7 +11,19 @@ module Users
 
     def call
       user = User.new(@params)
-      return Result.failure(:invalid, user.errors, user) unless user.save
+      return Result.failure(:invalid, user.errors, user) unless user.valid?
+
+      committed = false
+
+      ActiveRecord::Base.transaction do
+        user.save!
+        workspace_result = Workspaces::Create.call(user: user, name: "#{user.name}'s Workspace")
+        raise ActiveRecord::Rollback unless workspace_result.success?
+
+        committed = true
+      end
+
+      return Result.failure(:workspace_failed) unless committed
 
       Users::SendConfirmationEmail.call(user)
       AuthEvents::Record.call(kind: :signup, user: user, request: @request)

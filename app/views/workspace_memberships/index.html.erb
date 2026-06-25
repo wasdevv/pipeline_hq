@@ -1,0 +1,63 @@
+<% content_for :title, "Membros — #{current_workspace.name} — PipelineHQ" %>
+
+<div class="mx-auto max-w-3xl space-y-6 p-6">
+  <header class="flex flex-wrap items-start justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-semibold tracking-tight">Membros</h1>
+      <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+        <%= current_workspace.name %>
+      </p>
+    </div>
+  </header>
+
+  <nav class="border-b border-zinc-200 dark:border-zinc-800" aria-label="Abas do workspace">
+    <ul class="-mb-px flex gap-4 text-sm font-medium" role="tablist">
+      <li>
+        <%= link_to "Visão geral", workspace_path(current_workspace),
+              class: "inline-block border-b-2 border-transparent pb-3 text-zinc-500 transition hover:border-zinc-400 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200" %>
+      </li>
+      <li>
+        <%= link_to "Membros", workspace_memberships_path(current_workspace),
+              class: "inline-block border-b-2 border-indigo-600 pb-3 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400",
+              aria: { current: "page" } %>
+      </li>
+    </ul>
+  </nav>
+
+  <section aria-label="Lista de membros">
+    <% if @memberships.any? %>
+      <div class="overflow-hidden rounded-lg border border-zinc-200 dark:border-zinc-800">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-zinc-200 bg-zinc-50 text-left dark:border-zinc-800 dark:bg-zinc-900">
+              <th scope="col" class="px-4 py-3 font-medium text-zinc-500 dark:text-zinc-400">Nome</th>
+              <th scope="col" class="px-4 py-3 font-medium text-zinc-500 dark:text-zinc-400">Email</th>
+              <th scope="col" class="px-4 py-3 font-medium text-zinc-500 dark:text-zinc-400">Papel</th>
+              <th scope="col" class="px-4 py-3 font-medium text-zinc-500 dark:text-zinc-400">Desde</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-zinc-100 bg-white dark:divide-zinc-800 dark:bg-zinc-950">
+            <% @memberships.each do |membership| %>
+              <tr>
+                <td class="px-4 py-3 font-medium"><%= membership.user.name %></td>
+                <td class="px-4 py-3 text-zinc-500 dark:text-zinc-400"><%= membership.user.email_address %></td>
+                <td class="px-4 py-3">
+                  <span class="<%= role_badge_classes(membership.role) %> inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium">
+                    <%= t("workspaces.roles.#{membership.role}") %>
+                  </span>
+                </td>
+                <td class="px-4 py-3 text-zinc-500 dark:text-zinc-400">
+                  <%= l(membership.created_at, format: :short) %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <div class="rounded-lg border border-zinc-200 bg-zinc-50 px-6 py-12 text-center dark:border-zinc-800 dark:bg-zinc-900">
+        <p class="text-sm text-zinc-500 dark:text-zinc-400">Nenhum membro encontrado.</p>
+      </div>
+    <% end %>
+  </section>
+</div>

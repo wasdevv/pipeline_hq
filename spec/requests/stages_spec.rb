@@ -5,7 +5,8 @@ require "rails_helper"
 RSpec.describe "Stages", type: :request do
   include ActiveJob::TestHelper
 
-  let(:user) { create(:user) }
+  let(:user)      { create(:user) }
+  let(:workspace) { user.current_workspace }
   let(:create_params) { { name: "New Stage", position: 100, color: "#000000" } }
   let(:update_params) { { name: "Updated Stage", position: 200, color: "#ffffff" } }
 
@@ -15,7 +16,13 @@ RSpec.describe "Stages", type: :request do
     end
   end
 
-  it_behaves_like "a standard scaffold", model: Stage, factory: :stage, attribute_path: "stages", skip_create: true
+  it_behaves_like "a standard scaffold",
+    model: Stage,
+    factory: :stage,
+    attribute_path: "stages",
+    skip_create: false do
+    let(:record) { create(:stage, workspace: workspace) }
+  end
 
   context "when persistence fails" do
     before { allow_any_instance_of(Stage).to receive(:save).and_return(false) }
@@ -34,7 +41,7 @@ RSpec.describe "Stages", type: :request do
   end
 
   context "when update fails" do
-    let!(:existing) { create(:stage) }
+    let!(:existing) { create(:stage, workspace: workspace) }
 
     before { allow_any_instance_of(Stage).to receive(:update).and_return(false) }
 

@@ -6,5 +6,4 @@ class DomainEvent < ApplicationRecord
   belongs_to :subject, polymorphic: true, optional: true
 
   validates :kind, presence: true, length: { maximum: 64 }
-  validates :metadata, presence: true
 end

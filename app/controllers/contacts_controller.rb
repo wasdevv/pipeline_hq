@@ -1,31 +1,34 @@
+# frozen_string_literal: true
+
 class ContactsController < ApplicationController
-  before_action :set_contact, only: %i[ show edit update destroy ]
+  include WorkspaceScoped
 
-  # GET /contacts or /contacts.json
+  before_action :set_contact, only: %i[show edit update destroy]
+
   def index
-    @contacts = Contact.all
+    @contacts = policy_scope(Contact).includes(:account).order(created_at: :desc)
   end
 
-  # GET /contacts/1 or /contacts/1.json
   def show
+    authorize @contact
   end
 
-  # GET /contacts/new
   def new
-    @contact = Contact.new
+    @contact = current_workspace.contacts.build
+    authorize @contact
   end
 
-  # GET /contacts/1/edit
   def edit
+    authorize @contact
   end
 
-  # POST /contacts or /contacts.json
   def create
-    @contact = Contact.new(contact_params)
+    @contact = current_workspace.contacts.build(contact_params)
+    authorize @contact
 
     respond_to do |format|
       if @contact.save
-        format.html { redirect_to @contact, notice: "Contact was successfully created." }
+        format.html { redirect_to @contact, notice: t("contacts.created") }
         format.json { render :show, status: :created, location: @contact }
       else
         format.html { render :new, status: :unprocessable_content }
@@ -34,11 +37,12 @@ class ContactsController < ApplicationController
     end
   end
 
-  # PATCH/PUT /contacts/1 or /contacts/1.json
   def update
+    authorize @contact
+
     respond_to do |format|
       if @contact.update(contact_params)
-        format.html { redirect_to @contact, notice: "Contact was successfully updated.", status: :see_other }
+        format.html { redirect_to @contact, notice: t("contacts.updated"), status: :see_other }
         format.json { render :show, status: :ok, location: @contact }
       else
         format.html { render :edit, status: :unprocessable_content }
@@ -47,24 +51,23 @@ class ContactsController < ApplicationController
     end
   end
 
-  # DELETE /contacts/1 or /contacts/1.json
   def destroy
+    authorize @contact
     @contact.destroy!
 
     respond_to do |format|
-      format.html { redirect_to contacts_path, notice: "Contact was successfully destroyed.", status: :see_other }
+      format.html { redirect_to contacts_path, notice: t("contacts.destroyed"), status: :see_other }
       format.json { head :no_content }
     end
   end
 
   private
-    # Use callbacks to share common setup or constraints between actions.
-    def set_contact
-      @contact = Contact.find(params.expect(:id))
-    end
 
-    # Only allow a list of trusted parameters through.
-    def contact_params
-      params.expect(contact: [ :account_id, :name, :email, :phone, :role ])
-    end
+  def set_contact
+    @contact = current_workspace.contacts.find(params.expect(:id))
+  end
+
+  def contact_params
+    params.expect(contact: [ :account_id, :name, :email, :phone, :role ])
+  end
 end

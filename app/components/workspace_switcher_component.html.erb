@@ -1,0 +1,55 @@
+<div class="relative"
+     data-controller="dropdown"
+     data-action="keydown->dropdown#keydown"
+     aria-expanded="false"
+     aria-haspopup="true">
+  <button type="button"
+          data-action="click->dropdown#toggle"
+          class="flex max-w-[10rem] items-center gap-1.5 rounded-md border border-zinc-200 bg-white/80 px-3 py-1.5 text-sm font-medium text-zinc-700 shadow-sm backdrop-blur transition hover:bg-white dark:border-zinc-800 dark:bg-zinc-900/80 dark:text-zinc-200 dark:hover:bg-zinc-900"
+          aria-label="Trocar de workspace">
+    <span class="truncate"><%= @current_workspace&.name || "Workspace" %></span>
+    <svg class="size-3.5 shrink-0 text-zinc-400" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+      <path d="M4.5 6L8 9.5 11.5 6" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </button>
+
+  <div data-dropdown-target="menu"
+       hidden
+       role="menu"
+       aria-orientation="vertical"
+       class="absolute left-0 top-full z-50 mt-1.5 min-w-[12rem] rounded-lg border border-zinc-200 bg-white py-1 shadow-md dark:border-zinc-800 dark:bg-zinc-900">
+    <% if workspaces.any? %>
+      <p class="px-3 py-1 text-xs font-medium uppercase tracking-wide text-zinc-400 dark:text-zinc-500">
+        Trocar de workspace
+      </p>
+      <% workspaces.each do |workspace| %>
+        <% if active?(workspace) %>
+          <div class="flex items-center justify-between px-3 py-2 text-sm font-medium text-zinc-900 dark:text-zinc-100"
+               role="menuitem"
+               aria-current="true">
+            <span class="truncate"><%= workspace.name %></span>
+            <svg class="ml-2 size-4 shrink-0 text-indigo-600 dark:text-indigo-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <path fill-rule="evenodd" d="M16.704 5.293a1 1 0 0 1 0 1.414l-8 8a1 1 0 0 1-1.414 0l-4-4a1 1 0 0 1 1.414-1.414L8 12.586l7.293-7.293a1 1 0 0 1 1.414 0z" clip-rule="evenodd"/>
+            </svg>
+          </div>
+        <% else %>
+          <%= button_to workspace.name,
+                switch_workspace_path(workspace),
+                method: :post,
+                data: { turbo: false },
+                class: "flex w-full items-center px-3 py-2 text-left text-sm text-zinc-700 transition hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800",
+                role: "menuitem" %>
+        <% end %>
+      <% end %>
+      <div class="my-1 border-t border-zinc-100 dark:border-zinc-800"></div>
+    <% end %>
+    <%= link_to new_workspace_path,
+          class: "flex items-center gap-2 px-3 py-2 text-sm text-indigo-600 hover:bg-zinc-50 dark:text-indigo-400 dark:hover:bg-zinc-800",
+          role: "menuitem" do %>
+      <svg class="size-4 shrink-0" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M10 4v12M4 10h12"/>
+      </svg>
+      Criar workspace
+    <% end %>
+  </div>
+</div>

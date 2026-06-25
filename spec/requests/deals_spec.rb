@@ -5,10 +5,11 @@ require "rails_helper"
 RSpec.describe "Deals", type: :request do
   include ActiveJob::TestHelper
 
-  let(:user)    { create(:user) }
-  let(:account) { create(:account) }
-  let(:contact) { create(:contact, account: account) }
-  let(:stage)   { create(:stage) }
+  let(:user)      { create(:user) }
+  let(:workspace) { user.current_workspace }
+  let(:account)   { create(:account, workspace: workspace) }
+  let(:contact)   { create(:contact, workspace: workspace, account: account) }
+  let(:stage)     { create(:stage, workspace: workspace) }
   let(:create_params) do
     {
       title:             "New Deal",
@@ -29,5 +30,12 @@ RSpec.describe "Deals", type: :request do
     end
   end
 
-  it_behaves_like "a standard scaffold", model: Deal, factory: :deal, attribute_path: "deals", invalid_attribute: :account_id, skip_create: true
+  it_behaves_like "a standard scaffold",
+    model: Deal,
+    factory: :deal,
+    attribute_path: "deals",
+    invalid_attribute: :account_id,
+    skip_create: false do
+    let(:record) { create(:deal, workspace: workspace, account: account, contact: contact, stage: stage) }
+  end
 end

@@ -1,0 +1,39 @@
+pt-BR:
+  pundit:
+    not_authorized: "Você não tem permissão para essa ação."
+
+  workspaces:
+    no_workspace: "Nenhum workspace encontrado. Crie um para continuar."
+    created: "Workspace criado com sucesso."
+    updated: "Workspace atualizado com sucesso."
+    switched: "Workspace alterado com sucesso."
+    roles:
+      owner: "Proprietário"
+      admin: "Administrador"
+      member: "Membro"
+      viewer: "Espectador"
+
+  accounts:
+    created: "Conta criada com sucesso."
+    updated: "Conta atualizada com sucesso."
+    destroyed: "Conta removida com sucesso."
+
+  contacts:
+    created: "Contato criado com sucesso."
+    updated: "Contato atualizado com sucesso."
+    destroyed: "Contato removido com sucesso."
+
+  stages:
+    created: "Etapa criada com sucesso."
+    updated: "Etapa atualizada com sucesso."
+    destroyed: "Etapa removida com sucesso."
+
+  deals:
+    created: "Negócio criado com sucesso."
+    updated: "Negócio atualizado com sucesso."
+    destroyed: "Negócio removido com sucesso."
+
+  activities:
+    created: "Atividade criada com sucesso."
+    updated: "Atividade atualizada com sucesso."
+    destroyed: "Atividade removida com sucesso."

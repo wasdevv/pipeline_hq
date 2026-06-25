@@ -8,6 +8,13 @@ FactoryBot.define do
     password_confirmation { "TestUser!2026PipelineHQ" }
     confirmed_at          { Time.current }
 
+    after(:create) do |user|
+      workspace = create(:workspace, owner: user)
+      create(:workspace_membership, workspace: workspace, user: user, role: :owner)
+      user.update_columns(current_workspace_id: workspace.id)
+      user.reload
+    end
+
     trait :unconfirmed do
       confirmed_at { nil }
     end

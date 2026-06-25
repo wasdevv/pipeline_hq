@@ -25,16 +25,9 @@ RSpec.describe DomainEvent, type: :model do
     it { is_expected.to validate_presence_of(:kind) }
     it { is_expected.to validate_length_of(:kind).is_at_most(64) }
 
-    it "rejects nil metadata" do
-      event = build(:domain_event, metadata: nil)
-      expect(event).not_to be_valid
-      expect(event.errors[:metadata]).to be_present
-    end
-
-    it "rejects empty-hash metadata (blank)" do
+    it "accepts empty-hash metadata (default state)" do
       event = build(:domain_event, metadata: {})
-      expect(event).not_to be_valid
-      expect(event.errors[:metadata]).to be_present
+      expect(event).to be_valid
     end
 
     it "accepts non-empty metadata" do

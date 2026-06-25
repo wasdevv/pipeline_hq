@@ -1,31 +1,34 @@
+# frozen_string_literal: true
+
 class ActivitiesController < ApplicationController
-  before_action :set_activity, only: %i[ show edit update destroy ]
+  include WorkspaceScoped
 
-  # GET /activities or /activities.json
+  before_action :set_activity, only: %i[show edit update destroy]
+
   def index
-    @activities = Activity.all
+    @activities = policy_scope(Activity).includes(:deal).order(occurred_at: :desc)
   end
 
-  # GET /activities/1 or /activities/1.json
   def show
+    authorize @activity
   end
 
-  # GET /activities/new
   def new
-    @activity = Activity.new
+    @activity = current_workspace.activities.build
+    authorize @activity
   end
 
-  # GET /activities/1/edit
   def edit
+    authorize @activity
   end
 
-  # POST /activities or /activities.json
   def create
-    @activity = Activity.new(activity_params)
+    @activity = current_workspace.activities.build(activity_params)
+    authorize @activity
 
     respond_to do |format|
       if @activity.save
-        format.html { redirect_to @activity, notice: "Activity was successfully created." }
+        format.html { redirect_to @activity, notice: t("activities.created") }
         format.json { render :show, status: :created, location: @activity }
       else
         format.html { render :new, status: :unprocessable_content }
@@ -34,11 +37,12 @@ class ActivitiesController < ApplicationController
     end
   end
 
-  # PATCH/PUT /activities/1 or /activities/1.json
   def update
+    authorize @activity
+
     respond_to do |format|
       if @activity.update(activity_params)
-        format.html { redirect_to @activity, notice: "Activity was successfully updated.", status: :see_other }
+        format.html { redirect_to @activity, notice: t("activities.updated"), status: :see_other }
         format.json { render :show, status: :ok, location: @activity }
       else
         format.html { render :edit, status: :unprocessable_content }
@@ -47,24 +51,23 @@ class ActivitiesController < ApplicationController
     end
   end
 
-  # DELETE /activities/1 or /activities/1.json
   def destroy
+    authorize @activity
     @activity.destroy!
 
     respond_to do |format|
-      format.html { redirect_to activities_path, notice: "Activity was successfully destroyed.", status: :see_other }
+      format.html { redirect_to activities_path, notice: t("activities.destroyed"), status: :see_other }
       format.json { head :no_content }
     end
   end
 
   private
-    # Use callbacks to share common setup or constraints between actions.
-    def set_activity
-      @activity = Activity.find(params.expect(:id))
-    end
 
-    # Only allow a list of trusted parameters through.
-    def activity_params
-      params.expect(activity: [ :deal_id, :kind, :subject, :body, :occurred_at ])
-    end
+  def set_activity
+    @activity = current_workspace.activities.find(params.expect(:id))
+  end
+
+  def activity_params
+    params.expect(activity: [ :deal_id, :kind, :subject, :body, :occurred_at ])
+  end
 end

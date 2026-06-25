@@ -67,7 +67,8 @@ RSpec.describe AuthEvent, type: :model do
       user  = create(:user)
       event = AuthEvent.create!(kind: "login_success", user: user)
 
-      user.destroy
+      user.owned_workspaces.each { |w| w.workspace_memberships.delete_all; w.delete }
+      user.reload.destroy!
       expect(event.reload.user_id).to be_nil
     end
   end
