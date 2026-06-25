@@ -28,6 +28,9 @@ gem "pwned"              # HaveIBeenPwned breach check
 gem "rotp"               # TOTP (Google Authenticator) 2FA
 gem "rqrcode"            # QR code para enroll do 2FA
 
+# === Authorization ===
+gem "pundit", "~> 2.4"
+
 # === Safety nets ===
 gem "strong_migrations"  # bloqueia migrations inseguras
 
@@ -81,6 +84,7 @@ group :development, :test do
 end
 
 group :test do
+  gem "pundit-matchers", "~> 4.0"
   gem "capybara"
   gem "selenium-webdriver"
   gem "database_cleaner-active_record"

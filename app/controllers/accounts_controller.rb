@@ -1,31 +1,34 @@
+# frozen_string_literal: true
+
 class AccountsController < ApplicationController
-  before_action :set_account, only: %i[ show edit update destroy ]
+  include WorkspaceScoped
 
-  # GET /accounts or /accounts.json
+  before_action :set_account, only: %i[show edit update destroy]
+
   def index
-    @accounts = Account.all
+    @accounts = policy_scope(Account).order(created_at: :desc)
   end
 
-  # GET /accounts/1 or /accounts/1.json
   def show
+    authorize @account
   end
 
-  # GET /accounts/new
   def new
-    @account = Account.new
+    @account = current_workspace.accounts.build
+    authorize @account
   end
 
-  # GET /accounts/1/edit
   def edit
+    authorize @account
   end
 
-  # POST /accounts or /accounts.json
   def create
-    @account = Account.new(account_params)
+    @account = current_workspace.accounts.build(account_params)
+    authorize @account
 
     respond_to do |format|
       if @account.save
-        format.html { redirect_to @account, notice: "Account was successfully created." }
+        format.html { redirect_to @account, notice: t("accounts.created") }
         format.json { render :show, status: :created, location: @account }
       else
         format.html { render :new, status: :unprocessable_content }
@@ -34,11 +37,12 @@ class AccountsController < ApplicationController
     end
   end
 
-  # PATCH/PUT /accounts/1 or /accounts/1.json
   def update
+    authorize @account
+
     respond_to do |format|
       if @account.update(account_params)
-        format.html { redirect_to @account, notice: "Account was successfully updated.", status: :see_other }
+        format.html { redirect_to @account, notice: t("accounts.updated"), status: :see_other }
         format.json { render :show, status: :ok, location: @account }
       else
         format.html { render :edit, status: :unprocessable_content }
@@ -47,24 +51,23 @@ class AccountsController < ApplicationController
     end
   end
 
-  # DELETE /accounts/1 or /accounts/1.json
   def destroy
+    authorize @account
     @account.destroy!
 
     respond_to do |format|
-      format.html { redirect_to accounts_path, notice: "Account was successfully destroyed.", status: :see_other }
+      format.html { redirect_to accounts_path, notice: t("accounts.destroyed"), status: :see_other }
       format.json { head :no_content }
     end
   end
 
   private
-    # Use callbacks to share common setup or constraints between actions.
-    def set_account
-      @account = Account.find(params.expect(:id))
-    end
 
-    # Only allow a list of trusted parameters through.
-    def account_params
-      params.expect(account: [ :name, :industry, :website, :notes ])
-    end
+  def set_account
+    @account = current_workspace.accounts.find(params.expect(:id))
+  end
+
+  def account_params
+    params.expect(account: [ :name, :industry, :website, :notes ])
+  end
 end

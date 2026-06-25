@@ -35,6 +35,15 @@ module Authentication
 
   def resume_session
     Current.session ||= find_session_by_cookie
+    resolve_current_workspace if Current.session
+    Current.session
+  end
+
+  def resolve_current_workspace
+    workspace_id = session[:current_workspace_id] || Current.user&.current_workspace_id
+    Current.workspace = Current.user&.workspaces&.find_by(id: workspace_id) ||
+                        Current.user&.workspaces&.first
+    session[:current_workspace_id] = Current.workspace&.id
   end
 
   def find_session_by_cookie

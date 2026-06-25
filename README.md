@@ -77,14 +77,30 @@ Pra rodar o worker do Solid Queue em foreground (necessário pra audit log assí
 bin/jobs
 ```
 
+## Multi-tenancy
+
+Isolamento por **row-level scoping com `workspace_id`** em toda tabela CRM. User pertence a 1+ `Workspace` via `WorkspaceMembership` com role enum (`owner / admin / member / viewer`). Workspace ativo persiste em `User.current_workspace_id` e em `session[:current_workspace_id]` para switching mid-session.
+
+Defesa em profundidade em 3 camadas:
+
+1. **Schema**: `workspace_id NOT NULL` + FK em `accounts/contacts/stages/deals/activities`.
+2. **Scoping**: todo controller CRM usa `current_workspace.X.find(params[:id])` — nunca `X.find(params[:id])` solto.
+3. **Pundit**: `ApplicationPolicy` base checa `record.workspace_id == Current.workspace.id` em toda action, além das regras de role.
+
+Onboarding: `Users::Register` cria 1 workspace default no signup. Switching: dropdown no header (`WorkspaceSwitcherComponent`) com full reload pra evitar Turbo frames cacheados.
+
+Trade-offs e alternativas (schema-per-tenant, CanCanCan, ActionPolicy) em [ADR 0004](docs/adr/0004-multi-tenancy-row-level-scoping-pundit.md).
+
 ## Decisões de arquitetura
 
-ADRs vivem em `docs/adr/`. As duas decisões fundacionais hoje:
+ADRs vivem em `docs/adr/`:
 
 - [ADR 0001 — Auth nativa do Rails 8 em vez de Devise](docs/adr/0001-auth-nativa-rails-8.md)
 - [ADR 0002 — 10 camadas de hardening sobre a auth nativa](docs/adr/0002-camadas-hardening-auth.md)
+- [ADR 0003 — Deploy via Kamal 2 em Oracle Cloud Always Free (ARM)](docs/adr/0003-deploy-kamal-oracle-arm.md)
+- [ADR 0004 — Multi-tenancy via row-level scoping + Pundit](docs/adr/0004-multi-tenancy-row-level-scoping-pundit.md)
 
-Novas decisões transversais (multi-tenancy, framework de testes, engine de escalação, IA) entram como ADRs incrementais antes da implementação.
+Novas decisões transversais (engine de escalação, IA copiloto) entram como ADRs incrementais antes da implementação.
 
 ## Roadmap
 

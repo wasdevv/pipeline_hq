@@ -1,0 +1,30 @@
+<% content_for :title, "Criar workspace — PipelineHQ" %>
+
+<%= render AuthShellComponent.new(
+      title: "Crie seu workspace",
+      subtitle: "Um workspace reúne seu time e os dados do CRM em um só lugar.") do %>
+  <%= form_with model: @workspace, url: workspaces_path do |f| %>
+    <div class="space-y-4">
+      <%= render FormFieldComponent.new(
+            name: :name,
+            label: "Nome do workspace",
+            form: f,
+            autofocus: true,
+            required: true,
+            autocomplete: "organization",
+            hint: "Ex.: Acme, Meu Time, Vendas 2026") %>
+
+      <% if @workspace.errors.any? %>
+        <ul class="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800 dark:border-rose-900 dark:bg-rose-950 dark:text-rose-200"
+            role="alert"
+            aria-live="assertive">
+          <% @workspace.errors.full_messages.each do |msg| %>
+            <li><%= msg %></li>
+          <% end %>
+        </ul>
+      <% end %>
+
+      <%= render ButtonPrimaryComponent.new(label: "Criar workspace", form: f) %>
+    </div>
+  <% end %>
+<% end %>

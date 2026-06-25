@@ -32,6 +32,13 @@
   </head>
 
   <body class="min-h-full bg-white text-zinc-900 antialiased dark:bg-zinc-950 dark:text-zinc-100">
+    <%# Workspace switcher no canto superior esquerdo, só quando autenticado %>
+    <% if authenticated? && current_user %>
+      <div class="fixed left-4 top-4 z-50">
+        <%= render WorkspaceSwitcherComponent.new(current_user: current_user, current_workspace: current_workspace) %>
+      </div>
+    <% end %>
+
     <%# Theme toggle no canto superior direito, sempre visível %>
     <div class="fixed right-4 top-4 z-50" data-controller="theme">
       <button type="button" data-action="theme#toggle"

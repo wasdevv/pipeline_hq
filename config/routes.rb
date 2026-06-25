@@ -28,6 +28,12 @@ Rails.application.routes.draw do
   # Sudo
   resource :sudo, only: %i[new create], controller: "sudo_sessions"
 
+  # Workspaces
+  resources :workspaces, only: %i[new create show edit update] do
+    resources :memberships, only: %i[index], controller: "workspace_memberships"
+    post :switch, on: :member, to: "workspace_switches#create"
+  end
+
   # CRM resources (autenticadas)
   resources :activities
   resources :deals

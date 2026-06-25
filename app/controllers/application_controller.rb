@@ -2,9 +2,23 @@
 
 class ApplicationController < ActionController::Base
   include Authentication
-  # Only allow modern browsers supporting webp images, web push, badges, import maps, CSS nesting, and CSS :has.
-  allow_browser versions: :modern
+  include Pundit::Authorization
 
-  # Changes to the importmap will invalidate the etag for HTML responses
+  allow_browser versions: :modern
   stale_when_importmap_changes
+
+  helper_method :current_workspace
+
+  rescue_from Pundit::NotAuthorizedError, with: :pundit_not_authorized
+
+  private
+
+  def current_workspace
+    Current.workspace
+  end
+
+  def pundit_not_authorized
+    flash[:alert] = t("pundit.not_authorized")
+    redirect_back_or_to root_path, status: :see_other
+  end
 end
