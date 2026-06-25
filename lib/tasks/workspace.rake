@@ -15,7 +15,7 @@ namespace :workspace do
 
       user.update_columns(current_workspace_id: workspace.id) if user.current_workspace_id.nil?
 
-      [Account, Contact, Stage, Deal, Activity].each do |klass|
+      [ Account, Contact, Stage, Deal, Activity ].each do |klass|
         table = klass.quoted_table_name
         klass.unscoped.where(workspace_id: nil).find_each(batch_size: 1000) do |record|
           record.update_columns(workspace_id: workspace.id)
