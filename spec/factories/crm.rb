@@ -2,6 +2,7 @@
 
 FactoryBot.define do
   factory :account do
+    association :workspace
     sequence(:name) { |n| "Account ##{n}" }
     industry { "SaaS" }
     website  { "https://example.com" }
@@ -9,12 +10,14 @@ FactoryBot.define do
   end
 
   factory :stage do
+    association :workspace
     sequence(:name)     { |n| "Stage ##{n}" }
     sequence(:position) { |n| n }
     color { "#4f46e5" }
   end
 
   factory :contact do
+    association :workspace
     association :account
     sequence(:name)  { |n| "Contact ##{n}" }
     sequence(:email) { |n| "contact#{n}@pipelinehq.test" }
@@ -23,6 +26,7 @@ FactoryBot.define do
   end
 
   factory :deal do
+    association :workspace
     association :account
     association :contact
     association :stage
@@ -34,6 +38,7 @@ FactoryBot.define do
   end
 
   factory :activity do
+    association :workspace
     association :deal
     kind        { "call" }
     sequence(:subject) { |n| "Activity ##{n}" }
