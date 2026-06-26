@@ -91,6 +91,18 @@ Onboarding: `Users::Register` cria 1 workspace default no signup. Switching: dro
 
 Trade-offs e alternativas (schema-per-tenant, CanCanCan, ActionPolicy) em [ADR 0004](docs/adr/0004-multi-tenancy-row-level-scoping-pundit.md).
 
+## Domain audit
+
+Eventos de domínio (criação/edição/destruição de Account/Contact/Stage/Deal/Activity + lifecycle de Workspace) são registrados em `domain_events` via service `DomainEvents::Record`, async via Solid Queue (mesma defesa em profundidade do `AuthEvent` de auth).
+
+- Hooks centralizados via concern `RecordsDomainEvents` nos 5 controllers CRM
+- Workspace lifecycle via chamada explícita em `Workspaces::Create` + `WorkspacesController#update`
+- `kind` validado contra constante frozen `DomainEvent::KINDS` (21 entries)
+- `metadata` jsonb com índice GIN para queries operacionais
+- Leitura via `GET /domain_events` com filtro `?kind=` + paginação
+
+Por que async, sem callbacks AR, sem PaperTrail, polimórfico vs FKs tipadas: [ADR 0005](docs/adr/0005-domain-events-audit-strategy.md).
+
 ## Decisões de arquitetura
 
 ADRs vivem em `docs/adr/`:
@@ -99,6 +111,7 @@ ADRs vivem em `docs/adr/`:
 - [ADR 0002 — 10 camadas de hardening sobre a auth nativa](docs/adr/0002-camadas-hardening-auth.md)
 - [ADR 0003 — Deploy via Kamal 2 em Oracle Cloud Always Free (ARM)](docs/adr/0003-deploy-kamal-oracle-arm.md)
 - [ADR 0004 — Multi-tenancy via row-level scoping + Pundit](docs/adr/0004-multi-tenancy-row-level-scoping-pundit.md)
+- [ADR 0005 — Domain events audit strategy](docs/adr/0005-domain-events-audit-strategy.md)
 
 Novas decisões transversais (engine de escalação, IA copiloto) entram como ADRs incrementais antes da implementação.
 

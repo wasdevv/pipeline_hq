@@ -2,6 +2,7 @@
 
 class AccountsController < ApplicationController
   include WorkspaceScoped
+  include RecordsDomainEvents
 
   before_action :set_account, only: %i[show edit update destroy]
 

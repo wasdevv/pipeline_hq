@@ -1,6 +1,11 @@
 # frozen_string_literal: true
 
 class WorkspacesController < ApplicationController
+  include RecordsDomainEvents
+
+  skip_after_action :record_domain_event
+  after_action :record_domain_event, only: :update, if: :audit_eligible?
+
   before_action :set_workspace, only: %i[show edit update]
 
   def new
@@ -49,5 +54,17 @@ class WorkspacesController < ApplicationController
 
   def workspace_params
     params.expect(workspace: [ :name ])
+  end
+
+  def audit_subject
+    @workspace
+  end
+
+  def audit_workspace
+    @workspace
+  end
+
+  def audit_kind
+    "workspace.updated"
   end
 end

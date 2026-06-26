@@ -24,6 +24,13 @@ module Workspaces
         @user.update!(current_workspace_id: workspace.id)
       end
 
+      DomainEvents::Record.call(
+        kind:     "workspace.created",
+        workspace: workspace,
+        actor:    @user,
+        metadata: { slug: workspace.slug, name: workspace.name }
+      )
+
       Result.success(:created, workspace)
     rescue ActiveRecord::RecordNotUnique
       Result.failure(:slug_taken)

@@ -41,5 +41,8 @@ Rails.application.routes.draw do
   resources :contacts
   resources :accounts
 
+  # Audit log
+  resources :domain_events, only: :index
+
   get "up" => "rails/health#show", as: :rails_health_check
 end
