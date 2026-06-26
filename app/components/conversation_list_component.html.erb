@@ -3,23 +3,25 @@
     Nenhuma conversa encontrada.
   </div>
 <% else %>
-  <ul role="list">
+  <ul role="list" data-controller="active-link">
     <% @conversations.each do |conversation| %>
       <%
         name      = display_name(conversation)
         is_active = conversation.id == @active_id
         color     = avatar_color(name)
         unread    = unread_count_for(conversation)
-        item_base = "flex items-start gap-3 px-4 py-3 transition w-full"
-        item_cls  = is_active \
-          ? "#{item_base} bg-zinc-100 dark:bg-zinc-800" \
-          : "#{item_base} hover:bg-zinc-50 dark:hover:bg-zinc-900/60"
+        link_cls  = "flex items-start gap-3 px-4 py-3 transition w-full hover:bg-zinc-50 dark:hover:bg-zinc-900/60 aria-[current=page]:bg-zinc-100 dark:aria-[current=page]:bg-zinc-800"
       %>
       <li>
         <%= link_to conversation_path(conversation),
-              class: item_cls,
-              data: { turbo_frame: "_top" },
-              aria: { current: is_active ? "page" : false } do %>
+              class: link_cls,
+              data: {
+                turbo_frame: "conversation_thread",
+                turbo_action: "advance",
+                action: "click->active-link#activate",
+                active_link_target: "item"
+              },
+              aria: { current: is_active ? "page" : "false" } do %>
           <div class="relative shrink-0">
             <span class="inline-flex size-10 items-center justify-center rounded-full text-sm font-semibold <%= color[:bg] %> <%= color[:text] %>">
               <%= initials(name) %>

@@ -1,17 +1,29 @@
 <% content_for :title, "Mensagens — PipelineHQ" %>
 
-<div class="flex h-[calc(100vh-3.5rem)] overflow-hidden">
-  <%= render "conversations/sidebar",
-        conversations: @conversations,
-        current_user: current_user,
-        active_id: @conversation.id,
-        search_query: @search_query,
-        page: @page,
-        has_more: @has_more %>
+<% if turbo_frame_request_id == "conversation_thread" %>
+  <%= turbo_frame_tag "conversation_thread", class: "flex flex-1 flex-col overflow-hidden" do %>
+    <%= render ConversationThreadComponent.new(
+          conversation: @conversation,
+          current_user: current_user,
+          messages: @messages
+        ) %>
+  <% end %>
+<% else %>
+  <div class="flex h-[calc(100vh-3.5rem)] overflow-hidden">
+    <%= render "conversations/sidebar",
+          conversations: @conversations,
+          current_user: current_user,
+          active_id: @conversation.id,
+          search_query: @search_query,
+          page: @page,
+          has_more: @has_more %>
 
-  <%= render ConversationThreadComponent.new(
-        conversation: @conversation,
-        current_user: current_user,
-        messages: @messages
-      ) %>
-</div>
+    <%= turbo_frame_tag "conversation_thread", class: "flex flex-1 flex-col overflow-hidden" do %>
+      <%= render ConversationThreadComponent.new(
+            conversation: @conversation,
+            current_user: current_user,
+            messages: @messages
+          ) %>
+    <% end %>
+  </div>
+<% end %>

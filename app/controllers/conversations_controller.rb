@@ -23,11 +23,14 @@ class ConversationsController < ApplicationController
   def show
     authorize @conversation
     Conversations::MarkRead.call(participant: @conversation.participant_for(current_user))
+    @messages = @conversation.messages.includes(:sender).chronological
+
+    return if turbo_frame_request_id == "conversation_thread"
+
     @search_query = ""
     @page = 1
     @conversations = scoped_conversations.limit(PAGE_SIZE)
     @has_more = scoped_conversations.limit(1).offset(PAGE_SIZE).exists?
-    @messages = @conversation.messages.includes(:sender).chronological
   end
 
   def new
