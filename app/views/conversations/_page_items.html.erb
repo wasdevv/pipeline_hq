@@ -1,0 +1,14 @@
+<%= render ConversationListComponent.new(
+      conversations: conversations,
+      current_user: current_user,
+      active_id: active_id
+    ) %>
+
+<% if has_more %>
+  <%= turbo_frame_tag "conversations_page_#{page + 1}",
+        src: conversations_path(q: search_query, page: page + 1),
+        loading: :lazy,
+        class: "block px-4 py-3 text-center text-xs text-zinc-400 dark:text-zinc-500" do %>
+    Carregando mais…
+  <% end %>
+<% end %>

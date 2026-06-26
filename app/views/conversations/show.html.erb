@@ -1,11 +1,13 @@
 <% content_for :title, "Mensagens — PipelineHQ" %>
 
 <div class="flex h-[calc(100vh-3.5rem)] overflow-hidden">
-  <%= render ConversationListComponent.new(
+  <%= render "conversations/sidebar",
         conversations: @conversations,
         current_user: current_user,
-        active_id: @conversation.id
-      ) %>
+        active_id: @conversation.id,
+        search_query: @search_query,
+        page: @page,
+        has_more: @has_more %>
 
   <%= render ConversationThreadComponent.new(
         conversation: @conversation,

@@ -16,6 +16,14 @@ class Conversation < ApplicationRecord
   scope :for_user, ->(user) {
     where(id: ConversationParticipant.where(user_id: user.id).select(:conversation_id))
   }
+  scope :search, ->(query) {
+    next all if query.blank?
+
+    needle = "%#{ActiveRecord::Base.sanitize_sql_like(query.to_s.strip)}%"
+    where(id: ConversationParticipant.joins(:user)
+      .where("users.name ILIKE :q OR users.email_address ILIKE :q", q: needle)
+      .select(:conversation_id))
+  }
 
   def participant_for(user)
     participants.find_by(user_id: user.id)

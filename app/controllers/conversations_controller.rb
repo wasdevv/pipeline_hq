@@ -3,17 +3,30 @@
 class ConversationsController < ApplicationController
   include WorkspaceScoped
 
+  PAGE_SIZE = 20
+
   before_action :set_conversation, only: :show
 
   def index
-    @conversations = scoped_conversations
+    @search_query = params[:q].to_s
+    @page = [ params[:page].to_i, 1 ].max
+    @conversations = scoped_conversations.search(@search_query).limit(PAGE_SIZE).offset((@page - 1) * PAGE_SIZE)
+    @has_more = scoped_conversations.search(@search_query).limit(1).offset(@page * PAGE_SIZE).exists?
     @active_conversation = nil
+
+    respond_to do |format|
+      format.html
+      format.turbo_stream
+    end
   end
 
   def show
     authorize @conversation
     Conversations::MarkRead.call(participant: @conversation.participant_for(current_user))
-    @conversations = scoped_conversations
+    @search_query = ""
+    @page = 1
+    @conversations = scoped_conversations.limit(PAGE_SIZE)
+    @has_more = scoped_conversations.limit(1).offset(PAGE_SIZE).exists?
     @messages = @conversation.messages.includes(:sender).chronological
   end
 
