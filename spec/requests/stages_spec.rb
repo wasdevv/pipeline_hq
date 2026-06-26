@@ -57,4 +57,39 @@ RSpec.describe "Stages", type: :request do
       expect(response).to have_http_status(:unprocessable_content)
     end
   end
+
+  describe "RecordsDomainEvents concern" do
+    it "enqueues stage.created event on successful POST create" do
+      expect {
+        post stages_path, params: { stage: create_params }
+      }.to have_enqueued_job(DomainEventJob).with(
+        hash_including(kind: "stage.created")
+      )
+    end
+
+    it "enqueues stage.updated event on successful PATCH update" do
+      existing = create(:stage, workspace: workspace)
+      expect {
+        patch stage_path(existing), params: { stage: update_params }
+      }.to have_enqueued_job(DomainEventJob).with(
+        hash_including(kind: "stage.updated")
+      )
+    end
+
+    it "enqueues stage.destroyed event on successful DELETE destroy" do
+      existing = create(:stage, workspace: workspace)
+      expect {
+        delete stage_path(existing)
+      }.to have_enqueued_job(DomainEventJob).with(
+        hash_including(kind: "stage.destroyed")
+      )
+    end
+
+    it "does NOT enqueue an event when create fails (save returns false)" do
+      allow_any_instance_of(Stage).to receive(:save).and_return(false)
+      expect {
+        post stages_path, params: { stage: create_params }
+      }.not_to have_enqueued_job(DomainEventJob)
+    end
+  end
 end

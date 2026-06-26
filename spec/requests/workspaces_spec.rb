@@ -74,5 +74,13 @@ RSpec.describe "Workspaces", type: :request do
       expect(response).to have_http_status(:unprocessable_content)
       expect(workspace.reload.name).not_to eq("")
     end
+
+    it "enqueues workspace.updated domain event on successful update" do
+      expect {
+        patch workspace_path(workspace), params: { workspace: { name: "Renamed" } }
+      }.to have_enqueued_job(DomainEventJob).with(
+        hash_including(kind: "workspace.updated", workspace_id: workspace.id)
+      )
+    end
   end
 end

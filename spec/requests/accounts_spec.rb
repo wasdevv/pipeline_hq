@@ -68,4 +68,39 @@ RSpec.describe "Accounts", type: :request do
       expect(response).to have_http_status(:not_found)
     end
   end
+
+  describe "RecordsDomainEvents concern" do
+    it "enqueues account.created event on successful POST create" do
+      expect {
+        post accounts_path, params: { account: create_params }
+      }.to have_enqueued_job(DomainEventJob).with(
+        hash_including(kind: "account.created")
+      )
+    end
+
+    it "enqueues account.updated event on successful PATCH update" do
+      existing = create(:account, workspace: workspace)
+      expect {
+        patch account_path(existing), params: { account: update_params }
+      }.to have_enqueued_job(DomainEventJob).with(
+        hash_including(kind: "account.updated")
+      )
+    end
+
+    it "enqueues account.destroyed event on successful DELETE destroy" do
+      existing = create(:account, workspace: workspace)
+      expect {
+        delete account_path(existing)
+      }.to have_enqueued_job(DomainEventJob).with(
+        hash_including(kind: "account.destroyed")
+      )
+    end
+
+    it "does NOT enqueue an event when create fails (save returns false)" do
+      allow_any_instance_of(Account).to receive(:save).and_return(false)
+      expect {
+        post accounts_path, params: { account: create_params }
+      }.not_to have_enqueued_job(DomainEventJob)
+    end
+  end
 end

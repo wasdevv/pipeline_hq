@@ -36,4 +36,39 @@ RSpec.describe "Activities", type: :request do
     skip_create: false do
     let(:record) { create(:activity, workspace: workspace, deal: deal) }
   end
+
+  describe "RecordsDomainEvents concern" do
+    it "enqueues activity.created event on successful POST create" do
+      expect {
+        post activities_path, params: { activity: create_params }
+      }.to have_enqueued_job(DomainEventJob).with(
+        hash_including(kind: "activity.created")
+      )
+    end
+
+    it "enqueues activity.updated event on successful PATCH update" do
+      existing = create(:activity, workspace: workspace, deal: deal)
+      expect {
+        patch activity_path(existing), params: { activity: update_params }
+      }.to have_enqueued_job(DomainEventJob).with(
+        hash_including(kind: "activity.updated")
+      )
+    end
+
+    it "enqueues activity.destroyed event on successful DELETE destroy" do
+      existing = create(:activity, workspace: workspace, deal: deal)
+      expect {
+        delete activity_path(existing)
+      }.to have_enqueued_job(DomainEventJob).with(
+        hash_including(kind: "activity.destroyed")
+      )
+    end
+
+    it "does NOT enqueue an event when create fails (save returns false)" do
+      allow_any_instance_of(Activity).to receive(:save).and_return(false)
+      expect {
+        post activities_path, params: { activity: create_params }
+      }.not_to have_enqueued_job(DomainEventJob)
+    end
+  end
 end

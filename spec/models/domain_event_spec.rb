@@ -23,7 +23,7 @@ RSpec.describe DomainEvent, type: :model do
     subject { build(:domain_event) }
 
     it { is_expected.to validate_presence_of(:kind) }
-    it { is_expected.to validate_length_of(:kind).is_at_most(64) }
+    it { is_expected.to validate_inclusion_of(:kind).in_array(DomainEvent::KINDS) }
 
     it "accepts empty-hash metadata (default state)" do
       event = build(:domain_event, metadata: {})

@@ -34,6 +34,12 @@ RSpec.describe Workspaces::Create do
       it "generates a slug from the name" do
         expect(result.payload.slug).to eq("acme-corp")
       end
+
+      it "enqueues a workspace.created domain event" do
+        expect { result }.to have_enqueued_job(DomainEventJob).with(
+          hash_including(kind: "workspace.created")
+        )
+      end
     end
 
     context "with a blank name" do

@@ -2,6 +2,7 @@
 
 class DealsController < ApplicationController
   include WorkspaceScoped
+  include RecordsDomainEvents
 
   before_action :set_deal, only: %i[show edit update destroy]
 

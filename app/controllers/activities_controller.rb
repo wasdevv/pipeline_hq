@@ -2,6 +2,7 @@
 
 class ActivitiesController < ApplicationController
   include WorkspaceScoped
+  include RecordsDomainEvents
 
   before_action :set_activity, only: %i[show edit update destroy]
 

@@ -2,6 +2,7 @@
 
 class ContactsController < ApplicationController
   include WorkspaceScoped
+  include RecordsDomainEvents
 
   before_action :set_contact, only: %i[show edit update destroy]
 

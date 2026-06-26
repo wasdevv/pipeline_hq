@@ -2,6 +2,7 @@
 
 class StagesController < ApplicationController
   include WorkspaceScoped
+  include RecordsDomainEvents
 
   before_action :set_stage, only: %i[show edit update destroy]
 
