@@ -11,6 +11,7 @@ class Workspace < ApplicationRecord
   has_many :stages,        dependent: :destroy, inverse_of: :workspace
   has_many :deals,         dependent: :destroy, inverse_of: :workspace
   has_many :activities,    dependent: :destroy, inverse_of: :workspace
+  has_many :conversations, dependent: :destroy, inverse_of: :workspace
   has_many :domain_events, dependent: :destroy, inverse_of: :workspace
 
   validates :name, presence: true, length: { in: 2..80 }

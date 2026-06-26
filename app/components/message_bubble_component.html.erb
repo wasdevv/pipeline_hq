@@ -1,0 +1,26 @@
+<div class="flex items-end gap-2 <%= sent? ? 'justify-end' : 'justify-start' %>"
+     data-sender-id="<%= @message.sender_id %>"
+     data-created-at="<%= @message.created_at.to_i %>">
+  <% unless sent? %>
+    <span data-message-target="avatar"
+          class="inline-flex size-7 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-xs font-semibold text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300"
+          aria-hidden="true">
+      <%= sender_initials %>
+    </span>
+  <% end %>
+
+  <div class="flex max-w-[60%] flex-col <%= sent? ? 'items-end' : 'items-start' %>">
+    <div data-message-target="bubble"
+         class="whitespace-pre-line rounded-2xl px-4 py-2.5 text-sm leading-relaxed
+                <%= sent? \
+                  ? 'bg-indigo-600 text-white' \
+                  : 'bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100' %>">
+      <%= @message.body %>
+    </div>
+    <time data-message-target="timestamp"
+          class="mt-1 px-1 text-xs text-zinc-400 dark:text-zinc-500"
+          datetime="<%= @message.created_at.iso8601 %>">
+      <%= time_label %>
+    </time>
+  </div>
+</div>

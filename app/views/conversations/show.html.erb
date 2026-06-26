@@ -1,0 +1,15 @@
+<% content_for :title, "Mensagens — PipelineHQ" %>
+
+<div class="flex h-[calc(100vh-3.5rem)] overflow-hidden">
+  <%= render ConversationListComponent.new(
+        conversations: @conversations,
+        current_user: current_user,
+        active_id: @conversation.id
+      ) %>
+
+  <%= render ConversationThreadComponent.new(
+        conversation: @conversation,
+        current_user: current_user,
+        messages: @messages
+      ) %>
+</div>

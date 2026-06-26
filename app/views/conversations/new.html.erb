@@ -1,0 +1,46 @@
+<% content_for :title, "Nova conversa — PipelineHQ" %>
+
+<div class="mx-auto max-w-2xl px-4 py-10 sm:px-6 lg:px-8">
+  <div class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
+    <div class="mb-6">
+      <h1 class="text-lg font-semibold text-zinc-900 dark:text-zinc-100">Nova conversa</h1>
+      <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+        Selecione um colega do workspace <strong><%= current_workspace.name %></strong> para iniciar uma mensagem direta.
+      </p>
+    </div>
+
+    <% if @candidates.empty? %>
+      <%= render EmptyStateComponent.new(
+            icon: :users,
+            title: "Você é o único membro deste workspace",
+            description: "Convide colegas pelo painel de membros para começar a trocar mensagens."
+          ) %>
+    <% else %>
+      <%= form_with url: conversations_path, method: :post, local: true, class: "space-y-3" do |form| %>
+        <ul role="list" class="divide-y divide-zinc-100 dark:divide-zinc-800">
+          <% @candidates.each_with_index do |member, idx| %>
+            <li class="flex items-center gap-3 py-3">
+              <%= form.radio_button :recipient_id, member.id,
+                    checked: idx.zero?,
+                    class: "size-4 border-zinc-300 text-indigo-600 focus:ring-indigo-500 dark:border-zinc-700 dark:bg-zinc-900" %>
+              <span class="inline-flex size-9 items-center justify-center rounded-full bg-indigo-100 text-sm font-semibold text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300">
+                <%= member.name.to_s.split.first(2).map { |p| p[0] }.join.upcase %>
+              </span>
+              <%= form.label "recipient_id_#{member.id}", class: "flex flex-1 flex-col" do %>
+                <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100"><%= member.name %></span>
+                <span class="text-xs text-zinc-500 dark:text-zinc-400"><%= member.email_address %></span>
+              <% end %>
+            </li>
+          <% end %>
+        </ul>
+
+        <div class="flex items-center justify-end gap-2 border-t border-zinc-100 pt-4 dark:border-zinc-800">
+          <%= link_to "Cancelar", conversations_path,
+                class: "rounded-md px-3 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800" %>
+          <%= form.submit "Iniciar conversa",
+                class: "rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-indigo-500" %>
+        </div>
+      <% end %>
+    <% end %>
+  </div>
+</div>

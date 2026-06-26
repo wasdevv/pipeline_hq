@@ -1,0 +1,19 @@
+<% content_for :title, "Mensagens — PipelineHQ" %>
+
+<div class="flex h-[calc(100vh-3.5rem)] overflow-hidden">
+  <%= render ConversationListComponent.new(
+        conversations: @conversations,
+        current_user: current_user,
+        active_id: nil
+      ) %>
+
+  <div class="flex flex-1 items-center justify-center bg-zinc-50 dark:bg-zinc-900/50">
+    <%= render EmptyStateComponent.new(
+          icon: :chat,
+          title: "Selecione uma conversa",
+          description: "Escolha uma conversa na lista ao lado ou inicie uma nova com um colega do workspace.",
+          action_label: "Nova conversa",
+          action_path: new_conversation_path
+        ) %>
+  </div>
+</div>

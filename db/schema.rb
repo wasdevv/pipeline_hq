@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_24_000711) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_26_230422) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -71,6 +71,30 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_24_000711) do
     t.index ["workspace_id", "created_at"], name: "idx_contacts_workspace_created_at", order: { created_at: :desc }
   end
 
+  create_table "conversation_participants", force: :cascade do |t|
+    t.bigint "conversation_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "last_read_at"
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["conversation_id", "user_id"], name: "idx_conversation_participants_unique", unique: true
+    t.index ["conversation_id"], name: "index_conversation_participants_on_conversation_id"
+    t.index ["user_id", "last_read_at"], name: "idx_conversation_participants_user_last_read_at"
+    t.index ["user_id"], name: "index_conversation_participants_on_user_id"
+  end
+
+  create_table "conversations", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "kind", default: 0, null: false
+    t.datetime "last_message_at"
+    t.string "participants_signature"
+    t.datetime "updated_at", null: false
+    t.bigint "workspace_id", null: false
+    t.index ["workspace_id", "last_message_at"], name: "idx_conversations_workspace_last_message_at", order: { last_message_at: :desc }
+    t.index ["workspace_id", "participants_signature"], name: "idx_conversations_direct_signature_unique", unique: true, where: "((kind = 0) AND (participants_signature IS NOT NULL))"
+    t.index ["workspace_id"], name: "index_conversations_on_workspace_id"
+  end
+
   create_table "deals", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.integer "amount_cents"
@@ -105,6 +129,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_24_000711) do
     t.index ["workspace_id", "created_at"], name: "idx_domain_events_workspace_created_at", order: { created_at: :desc }
     t.index ["workspace_id", "kind", "created_at"], name: "idx_domain_events_workspace_kind_created_at", order: { created_at: :desc }
     t.index ["workspace_id"], name: "index_domain_events_on_workspace_id"
+  end
+
+  create_table "messages", force: :cascade do |t|
+    t.text "body", null: false
+    t.bigint "conversation_id", null: false
+    t.datetime "created_at", null: false
+    t.bigint "sender_id"
+    t.index ["conversation_id", "created_at"], name: "idx_messages_conversation_created_at"
+    t.index ["conversation_id"], name: "index_messages_on_conversation_id"
+    t.index ["sender_id"], name: "index_messages_on_sender_id"
   end
 
   create_table "sessions", force: :cascade do |t|
@@ -179,12 +213,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_24_000711) do
   add_foreign_key "auth_events", "users"
   add_foreign_key "contacts", "accounts"
   add_foreign_key "contacts", "workspaces", on_delete: :cascade
+  add_foreign_key "conversation_participants", "conversations", on_delete: :cascade
+  add_foreign_key "conversation_participants", "users", on_delete: :cascade
+  add_foreign_key "conversations", "workspaces", on_delete: :cascade
   add_foreign_key "deals", "accounts"
   add_foreign_key "deals", "contacts"
   add_foreign_key "deals", "stages"
   add_foreign_key "deals", "workspaces", on_delete: :cascade
   add_foreign_key "domain_events", "users", column: "actor_id", on_delete: :nullify
   add_foreign_key "domain_events", "workspaces", on_delete: :cascade
+  add_foreign_key "messages", "conversations", on_delete: :cascade
+  add_foreign_key "messages", "users", column: "sender_id", on_delete: :nullify
   add_foreign_key "sessions", "users"
   add_foreign_key "stages", "workspaces", on_delete: :cascade
   add_foreign_key "users", "workspaces", column: "current_workspace_id", on_delete: :nullify

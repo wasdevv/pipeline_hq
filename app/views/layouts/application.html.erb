@@ -33,7 +33,7 @@
 
   <body class="min-h-full bg-white text-zinc-900 antialiased dark:bg-zinc-950 dark:text-zinc-100">
     <% if authenticated? && current_user %>
-      <%= render TopbarComponent.new(current_user: current_user, current_workspace: current_workspace) %>
+      <%= render TopbarComponent.new(current_user: current_user, current_workspace: current_workspace, unread_messages_count: unread_messages_count) %>
     <% else %>
       <div class="fixed right-4 top-4 z-50" data-controller="theme">
         <button type="button" data-action="theme#toggle"

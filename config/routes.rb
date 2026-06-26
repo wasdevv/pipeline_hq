@@ -41,6 +41,11 @@ Rails.application.routes.draw do
   resources :contacts
   resources :accounts
 
+  # Mensageria interna
+  resources :conversations, only: %i[index show new create] do
+    resources :messages, only: :create
+  end
+
   # Audit log
   resources :domain_events, only: :index
 

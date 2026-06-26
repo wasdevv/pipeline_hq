@@ -37,3 +37,15 @@ pt-BR:
     created: "Atividade criada com sucesso."
     updated: "Atividade atualizada com sucesso."
     destroyed: "Atividade removida com sucesso."
+
+  conversations:
+    recipient_required: "Selecione um colega para iniciar a conversa."
+    errors:
+      self_dm: "Você não pode iniciar uma conversa consigo mesmo."
+      not_in_workspace: "Este colega não faz parte do workspace atual."
+
+  messages:
+    errors:
+      blank: "Não é possível enviar uma mensagem vazia."
+      not_participant: "Você não participa dessa conversa."
+      invalid: "Não foi possível enviar a mensagem."

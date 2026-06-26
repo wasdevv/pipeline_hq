@@ -9,6 +9,7 @@ class DomainEvent < ApplicationRecord
     stage.created stage.updated stage.destroyed
     deal.created deal.updated deal.destroyed
     activity.created activity.updated activity.destroyed
+    conversation.created direct_message_sent
   ].freeze
 
   self.inheritance_column = nil

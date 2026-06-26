@@ -13,6 +13,10 @@ class User < ApplicationRecord
 
   has_many :workspace_memberships, dependent: :destroy, inverse_of: :user
   has_many :workspaces, through: :workspace_memberships
+  has_many :conversation_participants, dependent: :destroy, inverse_of: :user
+  has_many :conversations, through: :conversation_participants
+  has_many :sent_messages, class_name: "Message", foreign_key: :sender_id,
+           dependent: :nullify, inverse_of: :sender
   has_many :owned_workspaces, class_name: "Workspace", foreign_key: :owner_id,
            dependent: :restrict_with_error, inverse_of: :owner
   belongs_to :current_workspace, class_name: "Workspace", optional: true
