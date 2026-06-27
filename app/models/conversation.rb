@@ -36,4 +36,12 @@ class Conversation < ApplicationRecord
   def self.direct_signature_for(users)
     users.map(&:id).sort.join("-")
   end
+
+  def to_s
+    if kind_direct?
+      names = members.limit(2).pluck(:name).compact
+      return "DM: #{names.join(' / ')}" if names.any?
+    end
+    "Conversa ##{id}"
+  end
 end

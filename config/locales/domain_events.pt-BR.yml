@@ -39,3 +39,5 @@ pt-BR:
       activity_created: "Atividade criada"
       activity_updated: "Atividade atualizada"
       activity_destroyed: "Atividade removida"
+      conversation_created: "Conversa iniciada"
+      direct_message_sent: "Mensagem enviada"
