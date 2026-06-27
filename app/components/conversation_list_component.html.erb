@@ -1,57 +1,49 @@
-<% if @conversations.empty? %>
-  <div class="p-6 text-center text-sm text-zinc-500 dark:text-zinc-400">
-    Nenhuma conversa encontrada.
-  </div>
-<% else %>
-  <ul role="list" data-controller="active-link">
-    <% @conversations.each do |conversation| %>
-      <%
-        name      = display_name(conversation)
-        is_active = conversation.id == @active_id
-        color     = avatar_color(name)
-        unread    = unread_count_for(conversation)
-        link_cls  = "flex items-start gap-3 px-4 py-3 transition w-full hover:bg-zinc-50 dark:hover:bg-zinc-900/60 aria-[current=page]:bg-zinc-100 dark:aria-[current=page]:bg-zinc-800"
-      %>
-      <li>
-        <%= link_to conversation_path(conversation),
-              class: link_cls,
-              data: {
-                turbo_frame: "conversation_thread",
-                turbo_action: "advance",
-                action: "click->active-link#activate",
-                active_link_target: "item"
-              },
-              aria: { current: is_active ? "page" : "false" } do %>
-          <div class="relative shrink-0">
-            <span class="inline-flex size-10 items-center justify-center rounded-full text-sm font-semibold <%= color[:bg] %> <%= color[:text] %>">
-              <%= initials(name) %>
+<% @conversations.each do |conversation| %>
+  <%
+    name      = display_name(conversation)
+    is_active = conversation.id == @active_id
+    color     = avatar_color(name)
+    unread    = unread_count_for(conversation)
+    link_cls  = "flex items-start gap-3 px-4 py-3 transition w-full hover:bg-zinc-50 dark:hover:bg-zinc-900/60 aria-[current=page]:bg-zinc-100 dark:aria-[current=page]:bg-zinc-800"
+  %>
+  <li>
+    <%= link_to conversation_path(conversation),
+          class: link_cls,
+          data: {
+            turbo_frame: "conversation_thread",
+            turbo_action: "advance",
+            action: "click->active-link#activate",
+            active_link_target: "item"
+          },
+          aria: { current: is_active ? "page" : "false" } do %>
+      <div class="relative shrink-0">
+        <span class="inline-flex size-10 items-center justify-center rounded-full text-sm font-semibold <%= color[:bg] %> <%= color[:text] %>">
+          <%= initials(name) %>
+        </span>
+      </div>
+
+      <div class="min-w-0 flex-1">
+        <div class="flex items-baseline justify-between gap-2">
+          <span class="truncate text-sm <%= unread > 0 ? 'font-semibold text-zinc-900 dark:text-zinc-100' : 'font-medium text-zinc-700 dark:text-zinc-300' %>">
+            <%= name %>
+          </span>
+          <span class="shrink-0 text-xs text-zinc-400 dark:text-zinc-500">
+            <%= relative_time(conversation) %>
+          </span>
+        </div>
+
+        <div class="mt-0.5 flex items-center justify-between gap-2">
+          <p class="truncate text-xs text-zinc-500 dark:text-zinc-400">
+            <%= last_message_text(conversation) %>
+          </p>
+          <% if unread > 0 %>
+            <span class="inline-flex size-4 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-[10px] font-semibold text-white dark:bg-indigo-500"
+                  aria-label="<%= unread %> mensagens não lidas">
+              <%= unread %>
             </span>
-          </div>
-
-          <div class="min-w-0 flex-1">
-            <div class="flex items-baseline justify-between gap-2">
-              <span class="truncate text-sm <%= unread > 0 ? 'font-semibold text-zinc-900 dark:text-zinc-100' : 'font-medium text-zinc-700 dark:text-zinc-300' %>">
-                <%= name %>
-              </span>
-              <span class="shrink-0 text-xs text-zinc-400 dark:text-zinc-500">
-                <%= relative_time(conversation) %>
-              </span>
-            </div>
-
-            <div class="mt-0.5 flex items-center justify-between gap-2">
-              <p class="truncate text-xs text-zinc-500 dark:text-zinc-400">
-                <%= last_message_text(conversation) %>
-              </p>
-              <% if unread > 0 %>
-                <span class="inline-flex size-4 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-[10px] font-semibold text-white dark:bg-indigo-500"
-                      aria-label="<%= unread %> mensagens não lidas">
-                  <%= unread %>
-                </span>
-              <% end %>
-            </div>
-          </div>
-        <% end %>
-      </li>
+          <% end %>
+        </div>
+      </div>
     <% end %>
-  </ul>
+  </li>
 <% end %>

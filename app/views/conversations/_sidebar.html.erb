@@ -36,14 +36,22 @@
   </div>
 
   <nav class="flex-1 overflow-y-auto" aria-label="Conversas">
-    <%= turbo_frame_tag "conversations_list" do %>
-      <%= render "conversations/page_items",
-            conversations: conversations,
-            current_user: current_user,
-            active_id: active_id,
-            search_query: search_query,
-            page: page,
-            has_more: has_more %>
+    <%= turbo_frame_tag "conversations_list", class: "contents" do %>
+      <% if conversations.empty? %>
+        <div class="p-6 text-center text-sm text-zinc-500 dark:text-zinc-400">
+          Nenhuma conversa encontrada.
+        </div>
+      <% else %>
+        <ul role="list" data-controller="active-link">
+          <%= render "conversations/page_items",
+                conversations: conversations,
+                current_user: current_user,
+                active_id: active_id,
+                search_query: search_query,
+                page: page,
+                has_more: has_more %>
+        </ul>
+      <% end %>
     <% end %>
   </nav>
 </aside>
