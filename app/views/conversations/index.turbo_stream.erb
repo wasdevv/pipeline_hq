@@ -1,0 +1,9 @@
+<%= turbo_stream.replace "conversations_sentinel" do %>
+  <%= render "conversations/page_items",
+        conversations: @conversations,
+        current_user: current_user,
+        active_id: nil,
+        search_query: @search_query,
+        page: @page,
+        has_more: @has_more %>
+<% end %>

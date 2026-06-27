@@ -36,7 +36,7 @@
   </div>
 
   <nav class="flex-1 overflow-y-auto" aria-label="Conversas">
-    <%= turbo_frame_tag "conversations_list", class: "contents" do %>
+    <%= turbo_frame_tag "conversations_list" do %>
       <% if conversations.empty? %>
         <div class="p-6 text-center text-sm text-zinc-500 dark:text-zinc-400">
           Nenhuma conversa encontrada.

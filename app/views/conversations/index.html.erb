@@ -1,5 +1,5 @@
 <% if turbo_frame_request_id == "conversations_list" %>
-  <%= turbo_frame_tag "conversations_list", class: "contents" do %>
+  <%= turbo_frame_tag "conversations_list" do %>
     <% if @conversations.empty? %>
       <div class="p-6 text-center text-sm text-zinc-500 dark:text-zinc-400">
         Nenhuma conversa encontrada.
@@ -15,16 +15,6 @@
               has_more: @has_more %>
       </ul>
     <% end %>
-  <% end %>
-<% elsif turbo_frame_request_id&.start_with?("conversations_page_") %>
-  <%= turbo_frame_tag turbo_frame_request_id, class: "contents" do %>
-    <%= render "conversations/page_items",
-          conversations: @conversations,
-          current_user: current_user,
-          active_id: nil,
-          search_query: @search_query,
-          page: @page,
-          has_more: @has_more %>
   <% end %>
 <% else %>
   <% content_for :title, "Mensagens — PipelineHQ" %>
