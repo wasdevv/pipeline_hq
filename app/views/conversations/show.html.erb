@@ -9,7 +9,7 @@
         ) %>
   <% end %>
 <% else %>
-  <div class="flex h-[calc(100vh-3.5rem)] overflow-hidden">
+  <div class="flex h-[calc(100vh-3.5rem)] overflow-hidden" data-controller="conversation-pane">
     <%= render "conversations/sidebar",
           conversations: @conversations,
           current_user: current_user,
@@ -18,7 +18,9 @@
           page: @page,
           has_more: @has_more %>
 
-    <%= turbo_frame_tag "conversation_thread", class: "flex flex-1 flex-col overflow-hidden" do %>
+    <%= turbo_frame_tag "conversation_thread",
+          class: "flex flex-1 flex-col overflow-hidden",
+          data: { conversation_pane_target: "thread" } do %>
       <%= render ConversationThreadComponent.new(
             conversation: @conversation,
             current_user: current_user,

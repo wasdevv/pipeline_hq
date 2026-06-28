@@ -19,7 +19,7 @@
 <% else %>
   <% content_for :title, "Mensagens — PipelineHQ" %>
 
-  <div class="flex h-[calc(100vh-3.5rem)] overflow-hidden">
+  <div class="flex h-[calc(100vh-3.5rem)] overflow-hidden" data-controller="conversation-pane">
     <%= render "conversations/sidebar",
           conversations: @conversations,
           current_user: current_user,
@@ -28,7 +28,9 @@
           page: @page,
           has_more: @has_more %>
 
-    <%= turbo_frame_tag "conversation_thread", class: "flex flex-1 items-center justify-center bg-zinc-50 dark:bg-zinc-900/50" do %>
+    <%= turbo_frame_tag "conversation_thread",
+          class: "hidden flex-1 items-center justify-center bg-zinc-50 md:flex dark:bg-zinc-900/50",
+          data: { conversation_pane_target: "thread" } do %>
       <%= render EmptyStateComponent.new(
             icon: :chat,
             title: "Selecione uma conversa",

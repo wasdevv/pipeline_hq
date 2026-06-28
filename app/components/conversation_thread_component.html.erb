@@ -3,8 +3,16 @@
          data-controller="conversation presence"
          data-presence-workspace-id-value="<%= @conversation.workspace_id %>"
          data-presence-recipient-id-value="<%= other_member&.id %>">
-  <header class="flex items-center justify-between border-b border-zinc-200 bg-white px-6 py-3 dark:border-zinc-800 dark:bg-zinc-950">
+  <header class="flex items-center justify-between border-b border-zinc-200 bg-white px-4 py-3 sm:px-6 dark:border-zinc-800 dark:bg-zinc-950">
     <div class="flex items-center gap-3">
+      <%= link_to conversations_path,
+            data: { turbo_frame: "_top" },
+            aria: { label: "Voltar para conversas" },
+            class: "inline-flex size-9 shrink-0 items-center justify-center rounded-full text-zinc-500 hover:bg-zinc-100 md:hidden dark:text-zinc-400 dark:hover:bg-zinc-800" do %>
+        <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M15 18l-6-6 6-6"/>
+        </svg>
+      <% end %>
       <span class="inline-flex size-9 items-center justify-center rounded-full bg-indigo-100 text-sm font-semibold text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300">
         <%= initials(display_name) %>
       </span>
@@ -20,7 +28,7 @@
     </div>
   </header>
 
-  <div class="flex-1 overflow-y-auto bg-zinc-50 px-6 py-4 dark:bg-zinc-900/50"
+  <div class="flex-1 overflow-y-auto bg-zinc-50 px-4 py-4 sm:px-6 dark:bg-zinc-900/50"
        data-conversation-target="scroll"
        aria-live="polite"
        aria-label="Mensagens">
@@ -58,7 +66,7 @@
               placeholder: "Escreva uma mensagem…",
               aria: { label: "Campo de mensagem" },
               data: { "message-form-target": "input" },
-              class: "flex-1 resize-none bg-transparent py-1 text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none dark:text-zinc-100 dark:placeholder-zinc-600" %>
+              class: "flex-1 resize-none bg-transparent py-1 text-base text-zinc-900 placeholder-zinc-400 focus:outline-none sm:text-sm dark:text-zinc-100 dark:placeholder-zinc-600" %>
         <%= form.button type: :submit,
               aria: { label: "Enviar mensagem" },
               class: "inline-flex size-8 shrink-0 items-center justify-center rounded-lg bg-indigo-600 text-white transition hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-500" do %>
