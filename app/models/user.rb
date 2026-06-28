@@ -45,7 +45,17 @@ class User < ApplicationRecord
   def otp_enabled?  = otp_enabled_at.present?
 
   def dashboard_section_enabled?(section)
-    pref = dashboard_preferences.find_by(section: section.to_s)
-    pref ? pref.enabled : true
+    dashboard_section_states.fetch(section.to_s, true)
+  end
+
+  def reload(*)
+    @dashboard_section_states = nil
+    super
+  end
+
+  private
+
+  def dashboard_section_states
+    @dashboard_section_states ||= dashboard_preferences.pluck(:section, :enabled).to_h
   end
 end
