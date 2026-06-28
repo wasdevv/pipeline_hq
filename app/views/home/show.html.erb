@@ -1,26 +1,152 @@
 <% content_for :title, "Dashboard — PipelineHQ" %>
-<div class="mx-auto max-w-5xl space-y-8 p-6">
-  <header>
-    <h1 class="text-2xl font-semibold tracking-tight">Bem-vindo, <%= current_user.name.split.first %></h1>
-    <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">PipelineHQ — seu CRM B2B.</p>
+
+<div class="mx-auto max-w-7xl space-y-8 p-6">
+  <header class="flex items-start justify-between gap-3">
+    <div>
+      <h1 class="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
+        Bem-vindo de volta, <%= current_user.name.split.first %>.
+      </h1>
+      <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+        <% if current_workspace.present? %>
+          Aqui está o que está acontecendo no workspace <span class="font-medium text-zinc-700 dark:text-zinc-300"><%= current_workspace.name %></span>.
+        <% else %>
+          Crie um workspace pra começar a organizar seu funil de vendas.
+        <% end %>
+      </p>
+    </div>
+    <%= link_to edit_dashboard_preferences_path,
+          class: "inline-flex shrink-0 items-center gap-1.5 rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 shadow-sm transition hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800" do %>
+      <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M3 6h13M3 12h13M3 18h13M19 6v.01M19 12v.01M19 18v.01"/>
+      </svg>
+      <%= t("dashboard_preferences.customize_cta") %>
+    <% end %>
   </header>
 
-  <section class="grid gap-4 sm:grid-cols-3">
-    <%= render NavCardComponent.new(title: "Accounts", subtitle: "Empresas-cliente.", href: accounts_path) %>
-    <%= render NavCardComponent.new(title: "Contacts", subtitle: "Pessoas dos clientes.", href: contacts_path) %>
-    <%= render NavCardComponent.new(title: "Deals", subtitle: "Oportunidades em pipeline.", href: deals_path) %>
-    <%= render NavCardComponent.new(title: "Auditoria", subtitle: "Registro de ações do workspace.", href: domain_events_path) %>
-  </section>
+  <% if current_workspace.present? %>
+    <% if current_user.dashboard_section_enabled?(:stats) %>
+      <section aria-label="Estatísticas" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <%= render StatCardComponent.new(
+              label: "Pipeline aberto",
+              value: Money.new(@stats[:pipeline_cents].to_i, "BRL").format,
+              hint: "Soma dos negócios que ainda não fecharam.",
+              icon: :money,
+              accent: :indigo
+            ) %>
 
-  <section>
-    <h2 class="mb-3 text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">Atividade recente</h2>
-    <ul class="divide-y divide-zinc-200 rounded-lg border border-zinc-200 dark:divide-zinc-800 dark:border-zinc-800">
-      <% @auth_events.each do |e| %>
-        <li class="flex items-center justify-between p-3 text-sm">
-          <span class="font-mono"><%= e.kind %></span>
-          <span class="text-zinc-500 dark:text-zinc-400"><%= e.created_at.to_fs(:short) %></span>
-        </li>
+        <%= render StatCardComponent.new(
+              label: "Negócios em andamento",
+              value: @stats[:deals_open],
+              hint: "Excluindo ganhos e perdidos.",
+              icon: :briefcase,
+              accent: :sky
+            ) %>
+
+        <%= render StatCardComponent.new(
+              label: "Fechados nos últimos 30 dias",
+              value: @stats[:deals_won_30d],
+              hint: "Negócios marcados como ganhos.",
+              icon: :trophy,
+              accent: :emerald
+            ) %>
+
+        <%= render StatCardComponent.new(
+              label: "Atividades (30 dias)",
+              value: @stats[:activities_30d],
+              hint: "Calls, emails, reuniões registradas.",
+              icon: :pulse,
+              accent: :amber
+            ) %>
+      </section>
+    <% end %>
+
+    <%
+      nav_cards = [
+        [ :nav_accounts, { title: "Empresas", subtitle: pluralize(@stats[:accounts_total], "empresa cadastrada", "empresas cadastradas"), href: accounts_path } ],
+        [ :nav_contacts, { title: "Contatos", subtitle: pluralize(@stats[:contacts_total], "pessoa cadastrada", "pessoas cadastradas"), href: contacts_path } ],
+        [ :nav_deals,    { title: "Negócios", subtitle: "Funil de vendas e oportunidades.", href: deals_path } ],
+        [ :nav_audit,    { title: "Auditoria", subtitle: "Tudo que rolou neste workspace.", href: domain_events_path } ]
+      ].select { |key, _| current_user.dashboard_section_enabled?(key) }
+    %>
+    <% if nav_cards.any? %>
+      <section aria-label="Navegação rápida" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <% nav_cards.each do |_, attrs| %>
+          <%= render NavCardComponent.new(**attrs) %>
+        <% end %>
+      </section>
+    <% end %>
+
+    <% if current_user.dashboard_section_enabled?(:recent_events) %>
+    <section aria-label="Atividade recente no workspace">
+      <div class="flex items-baseline justify-between gap-3">
+        <h2 class="text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+          Últimos acontecimentos
+        </h2>
+        <%= link_to "Ver tudo", domain_events_path, class: "text-xs font-medium text-indigo-600 hover:underline dark:text-indigo-400" %>
+      </div>
+
+      <% if @recent_events.any? %>
+        <ul class="mt-3 overflow-hidden rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
+          <% @recent_events.each_with_index do |event, idx| %>
+            <li class="flex items-center justify-between gap-3 p-4 <%= "border-t border-zinc-100 dark:border-zinc-800" if idx > 0 %>">
+              <div class="min-w-0 flex-1">
+                <p class="text-sm text-zinc-900 dark:text-zinc-100">
+                  <span class="font-medium"><%= event.actor&.name || "Sistema" %></span>
+                  <span class="text-zinc-500 dark:text-zinc-400">
+                    <%= t("domain_events.kinds.#{event.kind.tr(".", "_")}", default: event.kind).downcase %>
+                  </span>
+                  <% if event.subject.present? %>
+                    <span class="text-zinc-700 dark:text-zinc-300">— <%= event.subject.to_s.truncate(60) %></span>
+                  <% end %>
+                </p>
+              </div>
+              <time class="shrink-0 text-xs text-zinc-400 dark:text-zinc-500"
+                    datetime="<%= event.created_at.iso8601 %>"
+                    title="<%= l(event.created_at, format: :long) %>">
+                <%= time_ago_in_words(event.created_at) %> atrás
+              </time>
+            </li>
+          <% end %>
+        </ul>
+      <% else %>
+        <div class="mt-3">
+          <%= render EmptyStateComponent.new(
+                icon: :activity,
+                title: "Nada aconteceu por aqui ainda",
+                description: "Quando você criar negócios, mover etapas ou cadastrar contatos, vamos registrar tudo neste lugar.",
+                action_label: "Cadastrar primeira empresa",
+                action_path: new_account_path
+              ) %>
+        </div>
       <% end %>
-    </ul>
-  </section>
+    </section>
+    <% end %>
+  <% else %>
+    <%= render EmptyStateComponent.new(
+          icon: :building,
+          title: "Crie seu workspace",
+          description: "Workspace é o lugar onde ficam suas empresas, contatos e negócios. Você pode criar quantos quiser (um por cliente, por exemplo).",
+          action_label: "Criar workspace",
+          action_path: new_workspace_path
+        ) %>
+  <% end %>
+
+  <% if current_user.dashboard_section_enabled?(:auth_activity) %>
+    <section aria-label="Atividade de auth" class="border-t border-zinc-200 pt-6 dark:border-zinc-800">
+      <h2 class="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+        Sua conta
+      </h2>
+      <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+        Últimas ações relacionadas ao seu login e sessões.
+      </p>
+      <ul class="mt-3 divide-y divide-zinc-100 overflow-hidden rounded-xl border border-zinc-200 dark:divide-zinc-800 dark:border-zinc-800">
+        <% @auth_events.each do |e| %>
+          <li class="flex items-center justify-between gap-3 px-4 py-3 text-sm">
+            <span class="font-mono text-xs text-zinc-600 dark:text-zinc-400"><%= e.kind %></span>
+            <span class="text-xs text-zinc-400 dark:text-zinc-500"><%= l(e.created_at, format: :short) %></span>
+          </li>
+        <% end %>
+      </ul>
+    </section>
+  <% end %>
 </div>

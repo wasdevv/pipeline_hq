@@ -49,3 +49,20 @@ pt-BR:
       blank: "Não é possível enviar uma mensagem vazia."
       not_participant: "Você não participa dessa conversa."
       invalid: "Não foi possível enviar a mensagem."
+
+  dashboard_preferences:
+    updated: "Dashboard personalizado com sucesso."
+    failed: "Não foi possível salvar suas preferências."
+    title: "Personalizar dashboard"
+    subtitle: "Escolha quais blocos aparecem na sua home."
+    save: "Salvar preferências"
+    cancel: "Cancelar"
+    customize_cta: "Personalizar"
+    sections:
+      stats: "Estatísticas (cards de pipeline e atividades)"
+      nav_accounts: "Empresas — atalho"
+      nav_contacts: "Contatos — atalho"
+      nav_deals: "Negócios — atalho"
+      nav_audit: "Auditoria — atalho"
+      recent_events: "Últimos acontecimentos"
+      auth_activity: "Atividade da sua conta"

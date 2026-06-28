@@ -17,6 +17,8 @@ class User < ApplicationRecord
   has_many :conversations, through: :conversation_participants
   has_many :sent_messages, class_name: "Message", foreign_key: :sender_id,
            dependent: :nullify, inverse_of: :sender
+  has_many :dashboard_preferences, class_name: "UserDashboardPreference",
+           dependent: :destroy, inverse_of: :user
   has_many :owned_workspaces, class_name: "Workspace", foreign_key: :owner_id,
            dependent: :restrict_with_error, inverse_of: :owner
   belongs_to :current_workspace, class_name: "Workspace", optional: true
@@ -41,4 +43,9 @@ class User < ApplicationRecord
   def confirmed?    = confirmed_at.present?
   def locked?       = locked_at.present? && locked_at > LOCK_DURATION.ago
   def otp_enabled?  = otp_enabled_at.present?
+
+  def dashboard_section_enabled?(section)
+    pref = dashboard_preferences.find_by(section: section.to_s)
+    pref ? pref.enabled : true
+  end
 end

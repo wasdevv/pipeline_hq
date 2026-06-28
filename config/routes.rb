@@ -46,6 +46,9 @@ Rails.application.routes.draw do
     resources :messages, only: :create
   end
 
+  # Preferências de dashboard
+  resource :dashboard_preferences, only: %i[edit update]
+
   # Audit log
   resources :domain_events, only: :index
 

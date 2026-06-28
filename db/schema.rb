@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_26_230422) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_27_011545) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -165,6 +165,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_26_230422) do
     t.index ["workspace_id", "position"], name: "idx_stages_workspace_position_unique", unique: true
   end
 
+  create_table "user_dashboard_preferences", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.boolean "enabled", default: true, null: false
+    t.integer "position", default: 0, null: false
+    t.string "section", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["user_id", "position"], name: "idx_user_dashboard_preferences_position"
+    t.index ["user_id", "section"], name: "idx_user_dashboard_preferences_unique", unique: true
+    t.index ["user_id"], name: "index_user_dashboard_preferences_on_user_id"
+  end
+
   create_table "users", force: :cascade do |t|
     t.datetime "confirmation_sent_at"
     t.datetime "confirmed_at"
@@ -226,6 +238,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_26_230422) do
   add_foreign_key "messages", "users", column: "sender_id", on_delete: :nullify
   add_foreign_key "sessions", "users"
   add_foreign_key "stages", "workspaces", on_delete: :cascade
+  add_foreign_key "user_dashboard_preferences", "users", on_delete: :cascade
   add_foreign_key "users", "workspaces", column: "current_workspace_id", on_delete: :nullify
   add_foreign_key "workspace_memberships", "users", on_delete: :cascade
   add_foreign_key "workspace_memberships", "workspaces", on_delete: :cascade
