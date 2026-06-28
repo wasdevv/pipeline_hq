@@ -1,5 +1,5 @@
 import { Controller } from "@hotwired/stimulus"
-import consumer from "channels/consumer"
+import cable from "channels/consumer"
 
 export default class extends Controller {
   static targets = ["status", "dot", "label"]
@@ -11,18 +11,24 @@ export default class extends Controller {
   }
 
   connect() {
-    this.subscription = consumer.subscriptions.create(
-      { channel: "WorkspacePresenceChannel", workspace_id: this.workspaceIdValue },
-      {
-        received: (data) => this.received(data)
-      }
-    )
+    this.subscribe()
   }
 
   disconnect() {
     if (this.subscription) {
       this.subscription.unsubscribe()
       this.subscription = null
+    }
+  }
+
+  async subscribe() {
+    try {
+      this.subscription = await cable.subscribeTo(
+        { channel: "WorkspacePresenceChannel", workspace_id: this.workspaceIdValue },
+        { received: (data) => this.received(data) }
+      )
+    } catch (error) {
+      console.warn("[presence] subscribe failed", error)
     }
   }
 
