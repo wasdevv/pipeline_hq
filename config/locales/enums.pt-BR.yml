@@ -1,0 +1,50 @@
+pt-BR:
+  enums:
+    deal:
+      status:
+        open: "Em aberto"
+        won: "Ganho"
+        lost: "Perdido"
+
+    activity:
+      kind:
+        call: "Ligação"
+        email: "Email"
+        meeting: "Reunião"
+        note: "Nota"
+        task: "Tarefa"
+
+    conversation:
+      kind:
+        direct: "Direta"
+        group: "Grupo"
+
+    workspace_membership:
+      role:
+        owner: "Proprietário"
+        admin: "Administrador"
+        member: "Membro"
+        viewer: "Espectador"
+
+    auth_event:
+      kind:
+        signup: "Cadastro"
+        email_confirmation_sent: "Email de confirmação enviado"
+        email_confirmation_failed: "Falha ao confirmar email"
+        email_confirmed: "Email confirmado"
+        login_success: "Login realizado"
+        login_failed: "Tentativa de login falhou"
+        account_locked: "Conta bloqueada"
+        account_auto_unlocked: "Conta desbloqueada automaticamente"
+        password_reset_requested: "Redefinição de senha solicitada"
+        password_reset_completed: "Senha redefinida"
+        otp_enrolled: "2FA ativado"
+        otp_disabled: "2FA desativado"
+        otp_verified: "2FA verificado"
+        otp_failed: "Falha na verificação do 2FA"
+        backup_code_used: "Código de backup utilizado"
+        backup_codes_regenerated: "Códigos de backup gerados"
+        session_revoked: "Sessão revogada"
+        sessions_revoked_all: "Todas as sessões revogadas"
+        sudo_started: "Modo sudo iniciado"
+        honeypot_triggered: "Honeypot acionado"

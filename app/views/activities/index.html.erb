@@ -5,7 +5,7 @@
       subtitle: "Cada call, email, reunião ou nota fica registrado aqui. É o histórico do que aconteceu em cada negócio.",
       records: @activities,
       columns: [
-        { label: "Tipo",    value: ->(a) { a.kind.present? ? content_tag(:span, a.kind, class: "inline-flex rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300") : "" } },
+        { label: "Tipo",    value: ->(a) { a.kind.present? ? content_tag(:span, translate_enum(:activity, :kind, a.kind), class: "inline-flex rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300") : "" } },
         { label: "Assunto", value: ->(a) { a.subject.presence || "—" } },
         { label: "Negócio", value: ->(a) { a.deal&.title || "—" } },
         { label: "Quando",  value: ->(a) { a.occurred_at.present? ? l(a.occurred_at, format: :short) : "—" } }

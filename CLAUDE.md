@@ -379,6 +379,9 @@ Canônicas e referenciadas por todos os subagents. Mudar uma regra exige atualiz
 29. Cobertura mínima por feature: model (validações/scopes), service (cada caminho do Result), 1 system test ponta-a-ponta. Mock apenas em `app/services/ai/` e HTTP externo (WebMock/VCR).
 30. Autorização explícita por ação — `current_user` autenticado não basta. Use Pundit ou policy class plain Ruby; scoping multi-tenant via `current_workspace`.
 
+### i18n de enums (31)
+31. Todo campo tipo enum/status/kind renderizado na UI **passa por `translate_enum(:model, :field, value)`** (helper em `app/helpers/enums_helper.rb`) e as chaves ficam em `config/locales/enums.pt-BR.yml` sob `enums.<model>.<field>.<value>`. Forms usam `enum_options_for(:model, :field, %w[...])` — nunca hardcoded arrays de rótulos em pt-BR no ERB. Ao adicionar um valor novo em `Model::KINDS` ou constante equivalente, atualiza também o `ENUM_INVENTORY` em `spec/i18n/enum_translations_spec.rb` — o spec trava CI se algum valor ficar sem tradução.
+
 ---
 
 ## Gems recomendadas (ainda a adicionar)

@@ -17,7 +17,7 @@
 
   <div>
     <%= form.label :kind, "Tipo de atividade", class: "block text-sm font-medium text-zinc-700 dark:text-zinc-300" %>
-    <%= form.select :kind, options_for_select([ [ "Ligação", "call" ], [ "Email", "email" ], [ "Reunião", "meeting" ], [ "Nota", "note" ], [ "Tarefa", "task" ] ], activity.kind), { prompt: "Selecione" }, class: "mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100" %>
+    <%= form.select :kind, options_for_select(enum_options_for(:activity, :kind, %w[call email meeting note task]), activity.kind), { prompt: "Selecione" }, class: "mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100" %>
   </div>
 
   <%= render FormFieldComponent.new(form: form, name: :subject, label: "Assunto", type: :text, required: true, hint: "Resumo curto do que aconteceu.") %>

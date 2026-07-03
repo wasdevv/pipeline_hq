@@ -9,7 +9,7 @@
         { label: "Empresa", value: ->(d) { d.account&.name || "—" } },
         { label: "Estágio", value: ->(d) { d.stage&.name || "—" } },
         { label: "Valor",   value: ->(d) { d.amount_cents.present? ? Money.new(d.amount_cents, d.currency || "BRL").format : "—" }, align: :right },
-        { label: "Status",  value: ->(d) { d.status.present? ? content_tag(:span, d.status, class: "inline-flex rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300") : "" } }
+        { label: "Status",  value: ->(d) { d.status.present? ? content_tag(:span, translate_enum(:deal, :status, d.status), class: "inline-flex rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300") : "" } }
       ],
       new_path: new_deal_path,
       new_label: "Novo negócio",
