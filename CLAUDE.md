@@ -6,11 +6,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **PipelineHQ** é um CRM B2B em Ruby on Rails 8 — pipeline de vendas estilo Pipedrive/HubSpot, construído como projeto de portfólio. O foco é **explorar Rails 8 moderno com decisões deliberadas e segurança real**, não cobertura de features.
 
-**Estado em 2026-06-23:**
+**Estado em 2026-07-03:**
 - Auth nativa Rails 8 + 10 camadas de hardening: completa, funcionando end-to-end, ~38 arquivos.
-- UI: split-screen no login (estilo Linear/Vercel) + toggle de tema dark/light com anti-flash; 6 ViewComponents (AuthShell, AuthHeader, FormField, ButtonPrimary, ButtonSecondary, NavCard).
-- 5 scaffolds CRM (Account/Contact/Stage/Deal/Activity) gerados mas SEM relacionamentos `has_many` e SEM multi-tenancy ainda.
-- **RSpec instalado e configurado**, 352 examples, 0 failures, **100% line coverage** / 93.4% branch.
+- UI: split-screen no login (estilo Linear/Vercel) + dark/light com anti-flash; topbar global sticky (brand + workspace switcher + theme toggle + user menu dropdown) em toda página autenticada; **15 telas CRM padronizadas** (new/edit/show × 5 entidades) + 2 workspaces (edit/show) usando ViewComponents shared.
+- ViewComponents (13+): AuthShell, AuthHeader, FormField, ButtonPrimary, ButtonSecondary, NavCard, Topbar, PageHeader, EmptyState, CrudIndex, StatCard, WorkspaceSwitcher, **ConversationList, ConversationThread, MessageBubble**.
+- Multi-tenancy completa: model `Workspace` + `WorkspaceMembership` (role enum owner/admin/member/viewer), scoping row-level por `current_workspace`, Pundit policies em todos os recursos (CRM + DM).
+- Audit domain via `DomainEvent` reusando pattern do `AuthEvent` (job assíncrono Solid Queue, GIN-indexed metadata, listagem paginada com filtro por kind + labels pt-BR + subject legível).
+- 5 scaffolds CRM com FK via `collection_select` scoped pra `current_workspace` (defesa dupla: UX + IDOR).
+- **DM interno 1:1** (`feature/internal-dm-mvp`): `Conversation` + `ConversationParticipant` + `Message` scoped por workspace; layout master-detail (sidebar + thread) responsivo no mobile; sidebar com busca server-side + infinite scroll (turbo_stream + IntersectionObserver); troca de chat via turbo-frame sem full reload; broadcast de nova mensagem via `broadcast_append_later_to` por participante; presence em tempo real via `WorkspacePresenceChannel` (ActionCable + `Presence::Tracker` in-memory com `Concurrent::Map`); toda ação emite `DomainEvent`.
+- **Dashboard personalizável por seção**: `UserDashboardPreference` (7 seções: stats, nav_accounts/contacts/deals/audit, recent_events, auth_activity) com toggle + reordenação por usuário; home mostra pipeline stats + eventos recentes do workspace + últimas 5 atividades de auth, sem N+1.
+- **RSpec**, 622 examples, 0 failures. Coverage do bloco DM/dashboard ainda pendente.
 - CI: GH Actions com `scan_ruby` + `scan_js` + `lint` em todo PR; suite RSpec completa só com label **`CI:full`** (sempre roda em push pra main).
 - **Subagents LOOPS pipeline em vigor** (13 agents em `.claude/agents/`, ver seção "Workflow").
 - Deploy: config Kamal 2 pronta em `config/deploy.yml` (PR #28 aberto), target Oracle Cloud Always Free ARM SP. VM ainda não provisionada.
@@ -147,6 +152,15 @@ bin/rails server
 | `ButtonPrimaryComponent` | Botão primário preto (light) / branco (dark) |
 | `ButtonSecondaryComponent` | Botão outline + variante `:danger` (vermelho) |
 | `NavCardComponent` | Cards de navegação no dashboard |
+| `PageHeaderComponent` | Header wide-content (título + subtítulo + CTA) em todas as telas CRM |
+| `EmptyStateComponent` | Estado vazio de listagens (ícone + copy + CTA) |
+| `CrudIndexComponent` | Wrapper de tabela CRUD (header, filtros, table slot, pagination slot) |
+| `StatCardComponent` | Cartão de métrica no dashboard (label + valor + delta) |
+| `TopbarComponent` | Barra sticky global (brand + switcher + tema + menu de conta) |
+| `WorkspaceSwitcherComponent` | Dropdown de troca de workspace |
+| `ConversationListComponent` | Sidebar do DM (lista de conversas + presence dot + last message) |
+| `ConversationThreadComponent` | Painel direito do DM (mensagens + form + turbo stream target) |
+| `MessageBubbleComponent` | Bubble individual de mensagem (variantes self/other) |
 
 **Tema dark/light:**
 - Tailwind v4 com `@custom-variant dark (&:where(.dark, .dark *))` em `app/assets/tailwind/application.css`.
@@ -166,6 +180,30 @@ bin/rails server
 | `Stage` | name, position, color | `has_many :deals`, unicidade de position por workspace |
 | `Deal` | title, account_id, contact_id, stage_id, amount_cents, currency, expected_close_on, status | `has_many :activities`, money via Money-Rails, `workspace_id` |
 | `Activity` | deal_id, kind, subject, body, occurred_at | `inverse_of:`, `workspace_id` |
+
+### DM interno (models + services + channel)
+
+| Modelo | Campos | Notas |
+|---|---|---|
+| `Conversation` | workspace_id, kind (`direct`/`group`), participants_signature, last_message_at | `direct_signature_for([user_a, user_b])` = ids ordenados, `join("-")`. Índice único parcial `(workspace_id, participants_signature) WHERE kind = 0` bloqueia DM duplicada. |
+| `ConversationParticipant` | conversation_id, user_id, last_read_at | Único por par; `last_read_at` alimenta badge de unread. |
+| `Message` | conversation_id, sender_id (nullable, `on_delete: :nullify`), body (max 4k), created_at | `broadcast_append_later_to [conversation, :messages, participant.user_id]` em `after_create_commit` (uma stream por participante, exclui o próprio sender). `record_timestamps = false` — timestamp único no create. |
+
+**Services** (`app/services/`):
+- `Conversations::FindOrCreateDirect(workspace:, initiator:, recipient:)` → `Result(:found|:created|:self_dm|:not_in_workspace)`; usa signature pra idempotência.
+- `Conversations::MarkRead(participant:)` → atualiza `last_read_at` do participante.
+- `Messages::Send(conversation:, sender:, body:)` → `Result(:sent|:blank|:not_participant|:invalid)`; escreve `Message` + atualiza `last_message_at` da conversa em transaction + emite `DomainEvent` `direct_message_sent`.
+
+**Presence** (`app/channels/workspace_presence_channel.rb` + `app/services/presence/tracker.rb`):
+- `WorkspacePresenceChannel` (`stream_from workspace_presence_#{ws_id}`) autoriza por membership, `Presence::Tracker.add/remove` (Concurrent::Map + refcount por tab aberta), broadcasta `snapshot` no `subscribed` e `update` em cada transição real online↔offline.
+- Cliente: `presence_controller.js` usa `cable.subscribeTo` (API turbo-rails) e liga dots visuais nos avatares.
+
+### Dashboard personalizado
+
+- `UserDashboardPreference` (has_many `:dashboard_preferences` no User) — `section` ∈ `%w[stats nav_accounts nav_contacts nav_deals nav_audit recent_events auth_activity]`, `enabled:boolean`, `position:integer`.
+- Índice único `(user_id, section)` + índice `(user_id, position)`; scope `ordered`.
+- `UserDashboardPreferences::Update(user:, params:)` faz upsert por seção.
+- `DashboardPreferencesController#edit/update` — form permite toggle + reorder.
 
 ### Service Object pattern (em uso)
 
@@ -190,23 +228,32 @@ end
 ```
 app/
 ├── assets/tailwind/application.css   # imports + @custom-variant dark
-├── components/                        # 6 ViewComponents
+├── channels/{application_cable,workspace_presence_channel}.rb
+├── components/                        # 15+ ViewComponents (auth/CRUD/topbar/DM)
 ├── controllers/
-│   ├── concerns/{authentication,sudo_required}.rb
+│   ├── concerns/{authentication,sudo_required,workspace_scoped}.rb
 │   ├── home_controller.rb
 │   ├── {sessions,registrations,confirmations,passwords,two_factors,sudo_sessions,sessions_management}_controller.rb
-│   └── {accounts,contacts,deals,stages,activities}_controller.rb  # scaffolds
+│   ├── {workspaces,workspace_memberships,workspace_switches,domain_events}_controller.rb
+│   ├── {conversations,messages,dashboard_preferences}_controller.rb   # DM + prefs
+│   └── {accounts,contacts,deals,stages,activities}_controller.rb     # CRM
 ├── jobs/auth_event_job.rb
-├── javascript/controllers/            # Stimulus: theme, honeypot, otp-input
+├── javascript/controllers/            # Stimulus: theme, honeypot, otp_input, dropdown, active_link, conversation, conversation_pane, presence, message_form, infinite_scroll, search_form
 ├── mailers/confirmations_mailer.rb
-├── models/{user,session,current,auth_event,account,contact,stage,deal,activity}.rb
+├── models/{user,session,current,auth_event,workspace,workspace_membership,domain_event,account,contact,stage,deal,activity,conversation,conversation_participant,message,user_dashboard_preference}.rb
 ├── services/
 │   ├── result.rb
 │   ├── auth_events/record.rb
+│   ├── domain_events/record.rb
 │   ├── passwords/breach_check.rb
 │   ├── users/{register,confirm,lock,track_failed_attempt,reset_failed_attempts,send_confirmation_email}.rb
 │   ├── sessions/{sign_in,touch_activity,start_sudo}.rb
-│   └── two_factor/{enroll,confirm,verify,disable,generate_backup_codes,regenerate_backup_codes}.rb
+│   ├── two_factor/{enroll,confirm,verify,disable,generate_backup_codes,regenerate_backup_codes}.rb
+│   ├── workspaces/{create,switch}.rb
+│   ├── conversations/{find_or_create_direct,mark_read}.rb
+│   ├── messages/send.rb
+│   ├── presence/tracker.rb
+│   └── user_dashboard_preferences/update.rb
 ├── validators/password_strength_validator.rb
 └── views/
     ├── layouts/application.html.erb   # anti-flash script + theme toggle
@@ -220,7 +267,7 @@ config/
 └── routes.rb                          # todas as rotas de auth + CRM scaffolds
 
 db/
-├── migrate/                           # 13 migrations: 5 CRM + auth base + 6 hardening (3 cols + 3 indexes)
+├── migrate/                           # 20 migrations: 5 CRM scaffolds + auth (base + 3 hardening indexes) + workspaces/audit (12) + DM (2) + dashboard prefs (2)
 └── seeds.rb                           # cria demo@pipelinehq.test
 
 docs/adr/
@@ -458,12 +505,15 @@ Em `/home/was/projetos/.claude/settings.local.json`. Liberado por padrão: rbenv
 
 ## Roadmap atual (prioridade decrescente)
 
-1. ✅ **Specs críticos da auth** — DONE. 352 examples, 100% line coverage. Foundation, services, controllers, components, mailers, channels todos cobertos.
-2. **Multi-tenancy + audit domain** — model `Workspace`, `workspace_memberships` com role enum, scoping por `current_workspace` (concern), Pundit policies, `DomainEvents::Record` reusando pattern do `AuthEvent`. **2 PRs em sequência** pra caber no cost cap de 200k tokens/feature. Reviewer flagou scoping como dívida em todos os controllers atuais.
-3. **CRM real (kanban)** — relacionamentos `has_many` nos models, kanban Hotwire com Turbo Streams drag-and-drop em real-time. Depende de #2.
-4. **IA copiloto** — `app/services/ai/` com Claude API: lead scoring + draft de email contextual. Possível criar agent `ai-engineer` via `agent-builder` pra separar de `rails-engineer`.
-5. **Engine de escalação** — model `EscalationRule` + job recorrente Solid Queue + notificação (Slack/email).
-6. **Deploy Kamal 2** em Oracle Cloud Always Free SP — PR #28 com config pronta. Falta provisionar VM (gargalo de capacidade ARM em SP, pode levar dias). Ver ADR 0003.
+1. ✅ **Specs críticos da auth** — DONE. 352 examples, 100% line coverage no bloco de auth.
+2. ✅ **Multi-tenancy + audit domain** — DONE. `Workspace` + `WorkspaceMembership` + `WorkspaceScoped` concern + Pundit policies em todos os recursos + `DomainEvents::Record` + `DomainEvent` model reusando pattern do `AuthEvent`.
+3. ✅ **DM interno 1:1 MVP** — DONE em `feature/internal-dm-mvp`. Conversation/Message/ConversationParticipant + master-detail responsivo + turbo-frame de thread + broadcast por participante + presence via ActionCable + sidebar server-side search + infinite scroll. Falta: specs de model/service/channel, group DM (kind=1), attachments.
+4. ✅ **Dashboard personalizado** — DONE. `UserDashboardPreference` por seção; home mostra pipeline stats + eventos recentes + auth activity, sem N+1.
+5. **Specs de DM + dashboard prefs** — 622 examples atuais NÃO cobrem `Conversation`, `ConversationParticipant`, `Message`, `Messages::Send`, `Conversations::*`, `Presence::Tracker`, `WorkspacePresenceChannel`, `UserDashboardPreference`, `UserDashboardPreferences::Update`. Próxima onda de spec: 1 model spec por classe nova + service spec por caminho de Result + channel spec com `subscribe`/`unsubscribe`/reject + system spec de troca de conversa.
+6. **CRM real (kanban)** — kanban Hotwire com Turbo Streams drag-and-drop em real-time. Reutiliza padrão de broadcast do DM.
+7. **IA copiloto** — `app/services/ai/` com Claude API: lead scoring + draft de email contextual. Possível criar agent `ai-engineer` via `agent-builder` pra separar de `rails-engineer`.
+8. **Engine de escalação** — model `EscalationRule` + job recorrente Solid Queue + notificação (Slack/email).
+9. **Deploy Kamal 2** em Oracle Cloud Always Free SP — PR #28 com config pronta. Falta provisionar VM (gargalo de capacidade ARM em SP, pode levar dias). Ver ADR 0003.
 
 ## Dívidas conhecidas (do reviewer, não-bloqueantes pra portfólio mas devem ser endereçadas)
 
@@ -571,3 +621,24 @@ Posts LinkedIn em `posts/`.
 - **agent-builder vira "meta" do roster**: quando aparece domínio recorrente (ex.: `ai-engineer` pra `app/services/ai/`), spec curta vira agent novo seguindo o padrão (frontmatter completo + LOOPS protocol + cor única). Roster fica crescível sem inflar coordinator.
 - **Color field no frontmatter** ajuda visualização no Claude Code (chip colorido por agente). 13 cores distintas no roster atual; agent-builder consulta lista antes de assignar.
 - **Squash merge em stack profunda**: cherry-pick + force-push é o caminho seguro quando a base de PR é deletada após merge. Fazer linear (de-cherry-pick + reset hard pra main + cherry-pick só o commit único + force-push) evita "merge conflict" no GitHub vindo de fix-ups upstream que reescreveram histórico.
+
+### Feature: DM interno 1:1 + dashboard personalizado (2026-07-03)
+- **Signature ordenado ganha de UNIQUE composto quando o par é simétrico**: `direct_signature_for([a, b])` = `[a.id, b.id].sort.join("-")` armazenado em `participants_signature`, com índice único parcial `WHERE kind = 0`. Elimina corrida "dois usuários criam DM ao mesmo tempo" sem precisar de índice sobre `conversation_participants` cruzando com si mesmo. Group DM (kind=1) fica de fora do índice — signature simples não representa membership dinâmica.
+- **Broadcast por participante > broadcast pra conversa**: `broadcast_append_later_to [conversation, :messages, participant.user_id]` cria stream_name distinto por usuário, o que permite customizar payload (ex.: bubble com variante `self` vs `other`) sem "ghost message" pro próprio sender. Excluir sender do loop (`where.not(user_id: sender_id)`) é a chave — sender já vê a mensagem via turbo_stream do POST.
+- **`record_timestamps = false` no `Message`**: como o modelo escreve `created_at` manual e nunca faz `update`, não faz sentido pagar `updated_at`. Menos I/O + timestamp único garantido por callback `before_validation :set_created_at`. `updated_at` da conversa é bumpado explícito no `Messages::Send`.
+- **Presence in-memory > Solid Cache**: `Presence::Tracker` com `Concurrent::Map` + refcount por tab é 1ms; Solid Cache seria 10-50ms com round-trip PG. Trade-off: presence é single-process (não sobrevive multi-VM). Aceitável pra 1 dyno; migrar pra Redis/PG só quando escalar horizontal.
+- **Refcount por tab** evita bug "user abre 2 tabs, fecha uma, sistema marca offline". `add` retorna `true` só quando count transiciona 0→1; `remove` retorna `true` só quando cai a 0. Broadcast só emite `update` nas transições reais, evitando flap visual.
+- **`cable.subscribeTo` é a API correta do turbo-rails** — não `App.cable.subscriptions.create`. Erro fácil de commetter porque o docs do ActionCable puro usa a segunda. Turbo-rails wrappa numa API superior que já lida com auto-teardown no `disconnect` do controller Stimulus.
+- **Infinite scroll com turbo_stream + IntersectionObserver** > paginação clássica: um `<ul>` único na sidebar, sentinela no fim, POST com `?page=N&format=turbo_stream` que faz `stream.append` na mesma UL. Sem `<hr>`, sem "página 2 de 8" — só rolar. Requer manter `has_more` no controller pra o Stimulus parar o observer.
+- **Turbo-frame de thread pra troca sem full reload**: sidebar link com `data-turbo-frame="conversation_thread"` faz só o painel direito trocar. Controller detecta `turbo_frame_request_id == "conversation_thread"` e pula reload da sidebar (que já está em memória). Ganho de latência perceptível: ~80ms → ~20ms.
+- **Dashboard sem N+1 exige `includes(:actor, :subject)` em DomainEvents**: `subject` é polimórfico (`Deal`, `Account`, `Conversation`, ...), `includes(:subject)` preload dispara N queries agrupadas por tipo mas 1 por tipo, não 1 por evento. Bullet flagou; correção foi 1 linha.
+- **`UserDashboardPreference` seção-a-seção > blob JSON**: cada `section` vira row com `enabled` + `position`. Validação `inclusion: { in: SECTIONS }` no model bloqueia lixo. Um `has_many` no user + scope `ordered` no home resolve preferência per-user sem migration pra adicionar seção nova — só update na constante `SECTIONS` + novo cheque no partial.
+- **Subject legível no feed de audit**: `DomainEvent` mostrava "Deal #42" antes; migrado pra usar `subject.to_s` (`"DM: Alice / Bob"` pra `Conversation`, `"Deal: Acme Q3"` pra `Deal`). Regra: todo model referenciável por `DomainEvent` implementa `#to_s` humano.
+- **rack-mini-profiler storage path como String**: passar `Pathname` quebra em `File.exist?` interno. Correção: `.to_s` + `FileUtils.mkdir_p`. Bug óbvio só quando alguém explicita o storage; docs implica que Pathname funciona.
+
+### Feature: CRM screens polish + topbar global + security review (2026-06-26)
+- **R3 aplicada em massa rende component reuse alto**: depois de 5 entidades CRM com new/edit/show + 2 workspaces idênticos em estrutura, extraí `PageHeaderComponent`, `EmptyStateComponent`, `CrudIndexComponent`, `StatCardComponent` e `TopbarComponent`. 18 views encolheram pra render declarativo. Mudança de design = 1 edit em vez de 18.
+- **`collection_select` em FK do scaffold é dupla defesa**: scaffold gera `text_field :account_id` (UX horror — usuário digita ID numérico) E é vetor IDOR (aceita ID de qualquer workspace). Trocar pra `form.collection_select :account_id, current_workspace.accounts.order(:name), :id, :name` fixa UX + garante que dropdown só lista entidades do workspace atual. Defesa em profundidade (Pundit já bloqueia, mas o dropdown nunca expõe a opção inválida).
+- **Topbar sticky com user menu dropdown** elimina o problema do "botão de logout solto no canto" + "switcher flutuante left-4" + "theme toggle fixed right-4". Uma linha visual única (brand → switcher → tema → avatar com menu) é UI padrão de SaaS B2B (Linear, Vercel, Notion). Stimulus `dropdown` controller + `aria-haspopup` + `role="menu"` fechou a11y também.
+- **Security review focado em diff topbar passou clean**: ERB `<%= %>` auto-escape cobre os 4 sinks de user-controlled data (`name`, `email_address`, `user_initials`, `first_name`); `button_to` emite CSRF token automático; topbar gated por `authenticated? && current_user` no layout. Aprendizado: rodar `/security-review` por feature pequena é barato e dá confiança alta antes do merge — não esperar feature grande pra pedir auditoria.
+- **`AuthShellComponent` vs `PageHeaderComponent` cada um no seu lugar**: AuthShell centra V+H pra fluxos pré-CRM (signup, confirm, 2FA, workspace/new). PageHeader é wide-content pra dentro do app (CRM index/show/edit). Não unificar — são contextos visualmente diferentes (foco em formulário curto vs. listagem ampla).
