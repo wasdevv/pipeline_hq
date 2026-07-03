@@ -8,7 +8,7 @@ class WorkspacePresenceChannel < ApplicationCable::Channel
     stream_from stream_name(workspace_id)
     became_online = Presence::Tracker.add(workspace_id, current_user.id)
     broadcast_change(workspace_id, current_user.id, online: true) if became_online
-    transmit(type: "snapshot", online_ids: Presence::Tracker.online_ids(workspace_id))
+    transmit({ type: "snapshot", online_ids: Presence::Tracker.online_ids(workspace_id) })
   end
 
   def unsubscribed
@@ -32,9 +32,7 @@ class WorkspacePresenceChannel < ApplicationCable::Channel
   def broadcast_change(workspace_id, user_id, online:)
     ActionCable.server.broadcast(
       stream_name(workspace_id),
-      type: "update",
-      user_id: user_id,
-      online: online
+      { type: "update", user_id: user_id, online: online }
     )
   end
 end
