@@ -1,9 +1,8 @@
-<%= form_with(model: deal, class: "contents") do |form| %>
+<%= form_with(model: deal, class: "space-y-5") do |form| %>
   <% if deal.errors.any? %>
-    <div id="error_explanation" class="bg-red-50 text-red-500 px-3 py-2 font-medium rounded-md mt-3">
-      <h2><%= pluralize(deal.errors.count, "error") %> prohibited this deal from being saved:</h2>
-
-      <ul class="list-disc ml-6">
+    <div role="alert" class="rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-900 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-100">
+      <p class="font-medium"><%= pluralize(deal.errors.count, "erro") %> impediram salvar:</p>
+      <ul class="mt-1 list-disc pl-5">
         <% deal.errors.each do |error| %>
           <li><%= error.full_message %></li>
         <% end %>
@@ -11,47 +10,39 @@
     </div>
   <% end %>
 
-  <div class="my-5">
-    <%= form.label :title %>
-    <%= form.text_field :title, class: ["block shadow-sm rounded-md border px-3 py-2 mt-2 w-full", {"border-gray-400 focus:outline-blue-600": deal.errors[:title].none?, "border-red-400 focus:outline-red-600": deal.errors[:title].any?}] %>
+  <%= render FormFieldComponent.new(form: form, name: :title, label: "Título do negócio", type: :text, required: true, hint: "Ex.: SaaS de RH — Empresa XYZ (50 funcionários).") %>
+
+  <div>
+    <%= form.label :account_id, "Empresa", class: "block text-sm font-medium text-zinc-700 dark:text-zinc-300" %>
+    <%= form.collection_select :account_id, current_workspace.accounts.order(:name), :id, :name, { prompt: "Selecione uma empresa" }, class: "mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100" %>
   </div>
 
-  <div class="my-5">
-    <%= form.label :account_id %>
-    <%= form.text_field :account_id, class: ["block shadow-sm rounded-md border px-3 py-2 mt-2 w-full", {"border-gray-400 focus:outline-blue-600": deal.errors[:account_id].none?, "border-red-400 focus:outline-red-600": deal.errors[:account_id].any?}] %>
+  <div>
+    <%= form.label :contact_id, "Contato principal", class: "block text-sm font-medium text-zinc-700 dark:text-zinc-300" %>
+    <%= form.collection_select :contact_id, current_workspace.contacts.order(:name), :id, :name, { prompt: "Selecione um contato" }, class: "mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100" %>
   </div>
 
-  <div class="my-5">
-    <%= form.label :contact_id %>
-    <%= form.text_field :contact_id, class: ["block shadow-sm rounded-md border px-3 py-2 mt-2 w-full", {"border-gray-400 focus:outline-blue-600": deal.errors[:contact_id].none?, "border-red-400 focus:outline-red-600": deal.errors[:contact_id].any?}] %>
+  <div>
+    <%= form.label :stage_id, "Etapa do funil", class: "block text-sm font-medium text-zinc-700 dark:text-zinc-300" %>
+    <%= form.collection_select :stage_id, current_workspace.stages.order(:position), :id, :name, { prompt: "Selecione uma etapa" }, class: "mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100" %>
   </div>
 
-  <div class="my-5">
-    <%= form.label :stage_id %>
-    <%= form.text_field :stage_id, class: ["block shadow-sm rounded-md border px-3 py-2 mt-2 w-full", {"border-gray-400 focus:outline-blue-600": deal.errors[:stage_id].none?, "border-red-400 focus:outline-red-600": deal.errors[:stage_id].any?}] %>
+  <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+    <%= render FormFieldComponent.new(form: form, name: :amount_cents, label: "Valor (em centavos)", type: :number, hint: "Ex.: 500000 = R$ 5.000,00") %>
+    <%= render FormFieldComponent.new(form: form, name: :currency, label: "Moeda", type: :text, hint: "Ex.: BRL, USD.") %>
   </div>
 
-  <div class="my-5">
-    <%= form.label :amount_cents %>
-    <%= form.number_field :amount_cents, class: ["block shadow-sm rounded-md border px-3 py-2 mt-2 w-full", {"border-gray-400 focus:outline-blue-600": deal.errors[:amount_cents].none?, "border-red-400 focus:outline-red-600": deal.errors[:amount_cents].any?}] %>
+  <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+    <%= render FormFieldComponent.new(form: form, name: :expected_close_on, label: "Fechamento esperado", type: :date) %>
+
+    <div>
+      <%= form.label :status, "Status", class: "block text-sm font-medium text-zinc-700 dark:text-zinc-300" %>
+      <%= form.select :status, options_for_select([ [ "Em aberto", "open" ], [ "Ganho", "won" ], [ "Perdido", "lost" ] ], deal.status), { prompt: "Selecione" }, class: "mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100" %>
+    </div>
   </div>
 
-  <div class="my-5">
-    <%= form.label :currency %>
-    <%= form.text_field :currency, class: ["block shadow-sm rounded-md border px-3 py-2 mt-2 w-full", {"border-gray-400 focus:outline-blue-600": deal.errors[:currency].none?, "border-red-400 focus:outline-red-600": deal.errors[:currency].any?}] %>
-  </div>
-
-  <div class="my-5">
-    <%= form.label :expected_close_on %>
-    <%= form.date_field :expected_close_on, class: ["block shadow-sm rounded-md border px-3 py-2 mt-2 w-full", {"border-gray-400 focus:outline-blue-600": deal.errors[:expected_close_on].none?, "border-red-400 focus:outline-red-600": deal.errors[:expected_close_on].any?}] %>
-  </div>
-
-  <div class="my-5">
-    <%= form.label :status %>
-    <%= form.text_field :status, class: ["block shadow-sm rounded-md border px-3 py-2 mt-2 w-full", {"border-gray-400 focus:outline-blue-600": deal.errors[:status].none?, "border-red-400 focus:outline-red-600": deal.errors[:status].any?}] %>
-  </div>
-
-  <div class="inline">
-    <%= form.submit class: "w-full sm:w-auto rounded-md px-3.5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white inline-block font-medium cursor-pointer" %>
+  <div class="flex items-center justify-end gap-2 border-t border-zinc-200 pt-4 dark:border-zinc-800">
+    <%= link_to "Cancelar", deals_path, class: "rounded-md px-4 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800" %>
+    <%= form.submit (deal.persisted? ? "Salvar alterações" : "Cadastrar negócio"), class: ButtonPrimaryComponent::CLASSES + " sm:w-auto" %>
   </div>
 <% end %>

@@ -1,15 +1,40 @@
-<% content_for :title, "Showing stage" %>
+<% content_for :title, "#{@stage.name} — PipelineHQ" %>
 
-<div class="md:w-2/3 w-full">
-  <% if notice.present? %>
-    <p class="py-2 px-3 bg-green-50 mb-5 text-green-500 font-medium rounded-md inline-block" id="notice"><%= notice %></p>
-  <% end %>
+<div class="mx-auto max-w-3xl space-y-6 p-6">
+  <%= render PageHeaderComponent.new(
+        title: @stage.name,
+        subtitle: "Etapa do funil de vendas."
+      ) %>
 
-  <h1 class="font-bold text-4xl">Showing stage</h1>
+  <div class="overflow-hidden rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
+    <dl class="divide-y divide-zinc-200 text-sm dark:divide-zinc-800">
+      <div class="grid grid-cols-3 gap-4 px-6 py-4">
+        <dt class="font-medium text-zinc-500 dark:text-zinc-400">Nome</dt>
+        <dd class="col-span-2 text-zinc-900 dark:text-zinc-100"><%= @stage.name %></dd>
+      </div>
+      <div class="grid grid-cols-3 gap-4 px-6 py-4">
+        <dt class="font-medium text-zinc-500 dark:text-zinc-400">Ordem</dt>
+        <dd class="col-span-2 font-mono text-zinc-900 dark:text-zinc-100"><%= @stage.position || "—" %></dd>
+      </div>
+      <div class="grid grid-cols-3 gap-4 px-6 py-4">
+        <dt class="font-medium text-zinc-500 dark:text-zinc-400">Cor</dt>
+        <dd class="col-span-2">
+          <% if @stage.color.present? %>
+            <div class="inline-flex items-center gap-2">
+              <span class="inline-block size-6 rounded-full border border-zinc-200 dark:border-zinc-800" style="background-color: <%= @stage.color %>"></span>
+              <span class="font-mono text-xs text-zinc-600 dark:text-zinc-400"><%= @stage.color %></span>
+            </div>
+          <% else %>
+            <span class="text-zinc-400">—</span>
+          <% end %>
+        </dd>
+      </div>
+    </dl>
+  </div>
 
-  <%= render @stage %>
-
-  <%= link_to "Edit this stage", edit_stage_path(@stage), class: "w-full sm:w-auto text-center rounded-md px-3.5 py-2.5 bg-gray-100 hover:bg-gray-50 inline-block font-medium" %>
-  <%= link_to "Back to stages", stages_path, class: "w-full sm:w-auto text-center mt-2 sm:mt-0 sm:ml-2 rounded-md px-3.5 py-2.5 bg-gray-100 hover:bg-gray-50 inline-block font-medium" %>
-  <%= button_to "Destroy this stage", @stage, method: :delete, form_class: "sm:inline-block mt-2 sm:mt-0 sm:ml-2", class: "w-full rounded-md px-3.5 py-2.5 text-white bg-red-600 hover:bg-red-500 font-medium cursor-pointer", data: { turbo_confirm: "Are you sure?" } %>
+  <div class="flex flex-wrap items-center gap-2">
+    <%= link_to "Voltar", stages_path, class: "rounded-md px-4 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800" %>
+    <%= link_to "Editar etapa", edit_stage_path(@stage), class: "rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 shadow-sm transition hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800" %>
+    <%= button_to "Apagar etapa", @stage, method: :delete, form: { data: { turbo_confirm: "Apagar esta etapa?" } }, class: "rounded-md border border-rose-300 px-4 py-2 text-sm font-medium text-rose-700 shadow-sm transition hover:bg-rose-50 dark:border-rose-900 dark:text-rose-300 dark:hover:bg-rose-950/30" %>
+  </div>
 </div>

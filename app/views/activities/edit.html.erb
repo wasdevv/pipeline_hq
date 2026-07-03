@@ -1,10 +1,12 @@
-<% content_for :title, "Editing activity" %>
+<% content_for :title, "Editar #{@activity.subject || "atividade"} — PipelineHQ" %>
 
-<div class="md:w-2/3 w-full">
-  <h1 class="font-bold text-4xl">Editing activity</h1>
+<div class="mx-auto max-w-2xl space-y-6 p-6">
+  <%= render PageHeaderComponent.new(
+        title: "Editar atividade",
+        subtitle: @activity.subject.presence || "Sem assunto"
+      ) %>
 
-  <%= render "form", activity: @activity %>
-
-  <%= link_to "Show this activity", @activity, class: "w-full sm:w-auto text-center mt-2 sm:mt-0 sm:ml-2 rounded-md px-3.5 py-2.5 bg-gray-100 hover:bg-gray-50 inline-block font-medium" %>
-  <%= link_to "Back to activities", activities_path, class: "w-full sm:w-auto text-center mt-2 sm:mt-0 sm:ml-2 rounded-md px-3.5 py-2.5 bg-gray-100 hover:bg-gray-50 inline-block font-medium" %>
+  <div class="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
+    <%= render "form", activity: @activity %>
+  </div>
 </div>

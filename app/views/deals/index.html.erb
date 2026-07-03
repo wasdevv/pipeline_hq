@@ -1,29 +1,23 @@
-<% content_for :title, "Deals" %>
+<% content_for :title, "Negócios — PipelineHQ" %>
 
-<div class="w-full">
-  <% if notice.present? %>
-    <p class="py-2 px-3 bg-green-50 mb-5 text-green-500 font-medium rounded-md inline-block" id="notice"><%= notice %></p>
-  <% end %>
-
-  <div class="flex justify-between items-center">
-    <h1 class="font-bold text-4xl">Deals</h1>
-    <%= link_to "New deal", new_deal_path, class: "rounded-md px-3.5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white block font-medium" %>
-  </div>
-
-  <div id="deals" class="min-w-full divide-y divide-gray-200 space-y-5">
-    <% if @deals.any? %>
-      <% @deals.each do |deal| %>
-        <div class="flex flex-col sm:flex-row justify-between items-center pb-5 sm:pb-0">
-          <%= render deal %>
-          <div class="w-full sm:w-auto flex flex-col sm:flex-row space-x-2 space-y-2">
-            <%= link_to "Show", deal, class: "w-full sm:w-auto text-center rounded-md px-3.5 py-2.5 bg-gray-100 hover:bg-gray-50 inline-block font-medium" %>
-            <%= link_to "Edit", edit_deal_path(deal), class: "w-full sm:w-auto text-center rounded-md px-3.5 py-2.5 bg-gray-100 hover:bg-gray-50 inline-block font-medium" %>
-            <%= button_to "Destroy", deal, method: :delete, class: "w-full sm:w-auto rounded-md px-3.5 py-2.5 text-white bg-red-600 hover:bg-red-500 font-medium cursor-pointer", data: { turbo_confirm: "Are you sure?" } %>
-          </div>
-        </div>
-      <% end %>
-    <% else %>
-      <p class="text-center my-10">No deals found.</p>
-    <% end %>
-  </div>
-</div>
+<%= render CrudIndexComponent.new(
+      title: "Negócios",
+      subtitle: "Suas negociações em andamento e fechadas. Onde mora o dinheiro do funil.",
+      records: @deals,
+      columns: [
+        { label: "Negócio", value: ->(d) { d.title } },
+        { label: "Empresa", value: ->(d) { d.account&.name || "—" } },
+        { label: "Estágio", value: ->(d) { d.stage&.name || "—" } },
+        { label: "Valor",   value: ->(d) { d.amount_cents.present? ? Money.new(d.amount_cents, d.currency || "BRL").format : "—" }, align: :right },
+        { label: "Status",  value: ->(d) { d.status.present? ? content_tag(:span, d.status, class: "inline-flex rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300") : "" } }
+      ],
+      new_path: new_deal_path,
+      new_label: "Novo negócio",
+      show_path: ->(d) { deal_path(d) },
+      edit_path: ->(d) { edit_deal_path(d) },
+      delete_confirm: "Apagar este negócio?",
+      empty_icon: :briefcase,
+      empty_title: "Nenhum negócio ainda",
+      empty_description: "Negócio é a unidade básica do seu trabalho. Cada conversa com cliente pode virar um negócio aqui — assim você não esquece nem perde o follow-up.",
+      empty_action_label: "Registrar primeiro negócio"
+    ) %>

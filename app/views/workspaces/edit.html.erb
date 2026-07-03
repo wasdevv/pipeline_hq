@@ -1,15 +1,24 @@
 <% content_for :title, "Editar #{@workspace.name} — PipelineHQ" %>
 
-<div class="mx-auto max-w-xl space-y-6 p-6">
-  <header>
-    <h1 class="text-2xl font-semibold tracking-tight">Editar workspace</h1>
-    <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-      Altere o nome do workspace. O slug é gerado automaticamente.
-    </p>
-  </header>
+<div class="mx-auto max-w-2xl space-y-6 p-6">
+  <%= render PageHeaderComponent.new(
+        title: "Editar workspace",
+        subtitle: "Atualize o nome do seu workspace. O endereço (slug) é gerado automaticamente."
+      ) %>
 
-  <%= form_with model: @workspace, url: workspace_path(@workspace), method: :patch do |f| %>
-    <div class="space-y-5">
+  <div class="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
+    <%= form_with model: @workspace, url: workspace_path(@workspace), method: :patch, class: "space-y-5" do |f| %>
+      <% if @workspace.errors.any? %>
+        <div role="alert" class="rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-900 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-100">
+          <p class="font-medium"><%= pluralize(@workspace.errors.count, "erro") %> impediram salvar:</p>
+          <ul class="mt-1 list-disc pl-5">
+            <% @workspace.errors.full_messages.each do |msg| %>
+              <li><%= msg %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
       <%= render FormFieldComponent.new(
             name: :name,
             label: "Nome do workspace",
@@ -18,27 +27,16 @@
             required: true,
             autocomplete: "organization") %>
 
-      <div class="rounded-md border border-zinc-100 bg-zinc-50 px-3 py-2 dark:border-zinc-800 dark:bg-zinc-900">
+      <div class="rounded-md border border-zinc-200 bg-zinc-50 px-4 py-3 dark:border-zinc-800 dark:bg-zinc-900/50">
         <p class="text-xs text-zinc-500 dark:text-zinc-400">
-          Slug atual: <code class="font-mono"><%= @workspace.slug %></code> — atualizado automaticamente ao salvar.
+          Endereço atual: <code class="font-mono text-zinc-700 dark:text-zinc-300">/<%= @workspace.slug %></code>
         </p>
       </div>
 
-      <% if @workspace.errors.any? %>
-        <ul class="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800 dark:border-rose-900 dark:bg-rose-950 dark:text-rose-200"
-            role="alert"
-            aria-live="assertive">
-          <% @workspace.errors.full_messages.each do |msg| %>
-            <li><%= msg %></li>
-          <% end %>
-        </ul>
-      <% end %>
-
-      <div class="flex items-center gap-3">
+      <div class="flex items-center justify-end gap-2 border-t border-zinc-200 pt-4 dark:border-zinc-800">
+        <%= link_to "Cancelar", workspace_path(@workspace), class: "rounded-md px-4 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800" %>
         <%= render ButtonPrimaryComponent.new(label: "Salvar alterações", form: f) %>
-        <%= link_to "Cancelar", workspace_path(@workspace),
-              class: "text-sm text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200" %>
       </div>
-    </div>
-  <% end %>
+    <% end %>
+  </div>
 </div>

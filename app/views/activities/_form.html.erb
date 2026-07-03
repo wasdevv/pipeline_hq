@@ -1,9 +1,8 @@
-<%= form_with(model: activity, class: "contents") do |form| %>
+<%= form_with(model: activity, class: "space-y-5") do |form| %>
   <% if activity.errors.any? %>
-    <div id="error_explanation" class="bg-red-50 text-red-500 px-3 py-2 font-medium rounded-md mt-3">
-      <h2><%= pluralize(activity.errors.count, "error") %> prohibited this activity from being saved:</h2>
-
-      <ul class="list-disc ml-6">
+    <div role="alert" class="rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-900 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-100">
+      <p class="font-medium"><%= pluralize(activity.errors.count, "erro") %> impediram salvar:</p>
+      <ul class="mt-1 list-disc pl-5">
         <% activity.errors.each do |error| %>
           <li><%= error.full_message %></li>
         <% end %>
@@ -11,32 +10,28 @@
     </div>
   <% end %>
 
-  <div class="my-5">
-    <%= form.label :deal_id %>
-    <%= form.text_field :deal_id, class: ["block shadow-sm rounded-md border px-3 py-2 mt-2 w-full", {"border-gray-400 focus:outline-blue-600": activity.errors[:deal_id].none?, "border-red-400 focus:outline-red-600": activity.errors[:deal_id].any?}] %>
+  <div>
+    <%= form.label :deal_id, "Negócio relacionado", class: "block text-sm font-medium text-zinc-700 dark:text-zinc-300" %>
+    <%= form.collection_select :deal_id, current_workspace.deals.order(:title), :id, :title, { prompt: "Selecione um negócio" }, class: "mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100" %>
   </div>
 
-  <div class="my-5">
-    <%= form.label :kind %>
-    <%= form.text_field :kind, class: ["block shadow-sm rounded-md border px-3 py-2 mt-2 w-full", {"border-gray-400 focus:outline-blue-600": activity.errors[:kind].none?, "border-red-400 focus:outline-red-600": activity.errors[:kind].any?}] %>
+  <div>
+    <%= form.label :kind, "Tipo de atividade", class: "block text-sm font-medium text-zinc-700 dark:text-zinc-300" %>
+    <%= form.select :kind, options_for_select([ [ "Ligação", "call" ], [ "Email", "email" ], [ "Reunião", "meeting" ], [ "Nota", "note" ], [ "Tarefa", "task" ] ], activity.kind), { prompt: "Selecione" }, class: "mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100" %>
   </div>
 
-  <div class="my-5">
-    <%= form.label :subject %>
-    <%= form.text_field :subject, class: ["block shadow-sm rounded-md border px-3 py-2 mt-2 w-full", {"border-gray-400 focus:outline-blue-600": activity.errors[:subject].none?, "border-red-400 focus:outline-red-600": activity.errors[:subject].any?}] %>
+  <%= render FormFieldComponent.new(form: form, name: :subject, label: "Assunto", type: :text, required: true, hint: "Resumo curto do que aconteceu.") %>
+
+  <div>
+    <%= form.label :body, "Detalhes", class: "block text-sm font-medium text-zinc-700 dark:text-zinc-300" %>
+    <%= form.textarea :body, rows: 4, class: "mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm placeholder:text-zinc-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 dark:border-zinc-700 dark:bg-zinc-900" %>
+    <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">Anote o que foi conversado, decidido ou combinado.</p>
   </div>
 
-  <div class="my-5">
-    <%= form.label :body %>
-    <%= form.textarea :body, rows: 4, class: ["block shadow-sm rounded-md border px-3 py-2 mt-2 w-full", {"border-gray-400 focus:outline-blue-600": activity.errors[:body].none?, "border-red-400 focus:outline-red-600": activity.errors[:body].any?}] %>
-  </div>
+  <%= render FormFieldComponent.new(form: form, name: :occurred_at, label: "Quando aconteceu", type: :datetime_local) %>
 
-  <div class="my-5">
-    <%= form.label :occurred_at %>
-    <%= form.datetime_field :occurred_at, class: ["block shadow-sm rounded-md border px-3 py-2 mt-2 w-full", {"border-gray-400 focus:outline-blue-600": activity.errors[:occurred_at].none?, "border-red-400 focus:outline-red-600": activity.errors[:occurred_at].any?}] %>
-  </div>
-
-  <div class="inline">
-    <%= form.submit class: "w-full sm:w-auto rounded-md px-3.5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white inline-block font-medium cursor-pointer" %>
+  <div class="flex items-center justify-end gap-2 border-t border-zinc-200 pt-4 dark:border-zinc-800">
+    <%= link_to "Cancelar", activities_path, class: "rounded-md px-4 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800" %>
+    <%= form.submit (activity.persisted? ? "Salvar alterações" : "Registrar atividade"), class: ButtonPrimaryComponent::CLASSES + " sm:w-auto" %>
   </div>
 <% end %>

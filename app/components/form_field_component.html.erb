@@ -1,9 +1,9 @@
 <div>
   <div class="flex items-center justify-between">
     <% if @form %>
-      <%= @form.label @name, @label, class: "block text-sm font-medium" %>
+      <%= @form.label @name, @label, class: "block text-sm font-medium text-zinc-700 dark:text-zinc-300" %>
     <% else %>
-      <%= label_tag @name, @label, class: "block text-sm font-medium" %>
+      <%= label_tag @name, @label, class: "block text-sm font-medium text-zinc-700 dark:text-zinc-300" %>
     <% end %>
     <% if @action_label && @action_path %>
       <%= link_to @action_label, @action_path, class: "text-xs text-indigo-600 hover:underline dark:text-indigo-400" %>

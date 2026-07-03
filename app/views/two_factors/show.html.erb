@@ -1,12 +1,15 @@
-<% content_for :title, "Two-Factor Authentication" %>
+<% content_for :title, "Autenticação 2FA — PipelineHQ" %>
+
 <div class="mx-auto max-w-2xl space-y-6 p-6">
-  <header>
-    <h1 class="text-2xl font-semibold tracking-tight">Autenticação em duas etapas</h1>
-  </header>
+  <%= render PageHeaderComponent.new(
+        title: "Autenticação em duas etapas",
+        subtitle: "Camada extra de segurança usando código do seu celular (Google Authenticator, 1Password, Authy)."
+      ) %>
 
   <% if @enabled %>
-    <div class="rounded-lg border border-emerald-300 bg-emerald-50 p-4 text-sm text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-100">
-      Ativo. Você tem <%= @backup_count %> backup codes restantes.
+    <div class="rounded-xl border border-emerald-300 bg-emerald-50 p-4 text-sm text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-100">
+      <p class="font-medium">2FA está ativo nesta conta.</p>
+      <p class="mt-1 text-emerald-800 dark:text-emerald-200">Você tem <%= @backup_count %> backup codes restantes pra usar caso perca o acesso ao aplicativo.</p>
     </div>
 
     <div class="flex flex-wrap gap-3">
@@ -15,7 +18,11 @@
             variant: :danger, confirm: "Tem certeza? Vai reduzir a segurança da conta.") %>
     </div>
   <% else %>
-    <p class="text-sm text-zinc-500 dark:text-zinc-400">2FA não está ativo. Recomendamos ativar.</p>
+    <div class="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-100">
+      <p class="font-medium">2FA não está ativo.</p>
+      <p class="mt-1 text-amber-800 dark:text-amber-200">Recomendamos ativar — minimiza risco caso sua senha vaze.</p>
+    </div>
+
     <%= button_to "Ativar 2FA", enroll_two_factor_path, method: :get, class: ButtonPrimaryComponent::CLASSES %>
   <% end %>
 </div>

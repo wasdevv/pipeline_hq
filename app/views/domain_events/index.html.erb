@@ -1,14 +1,10 @@
 <% content_for :title, t("domain_events.index.title") %>
 
 <div class="mx-auto max-w-5xl space-y-6 p-6">
-  <header class="flex flex-wrap items-center justify-between gap-4">
-    <div>
-      <h1 class="text-2xl font-semibold tracking-tight"><%= t("domain_events.index.title") %></h1>
-      <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400"><%= t("domain_events.index.subtitle") %></p>
-    </div>
-    <%= link_to t("domain_events.index.back"), root_path,
-        class: "text-sm font-medium text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 underline underline-offset-2" %>
-  </header>
+  <%= render PageHeaderComponent.new(
+        title: t("domain_events.index.title"),
+        subtitle: t("domain_events.index.subtitle")
+      ) %>
 
   <form class="flex items-center gap-3" method="get" action="<%= domain_events_path %>">
     <label for="kind_filter" class="text-sm font-medium text-zinc-700 dark:text-zinc-300">
@@ -91,8 +87,10 @@
       <% end %>
     </nav>
   <% else %>
-    <div class="rounded-lg border border-zinc-200 p-8 text-center text-sm text-zinc-500 dark:border-zinc-800 dark:text-zinc-400">
-      <%= t("domain_events.index.empty") %>
-    </div>
+    <%= render EmptyStateComponent.new(
+          icon: :activity,
+          title: t("domain_events.index.empty"),
+          description: "Tudo que acontece no workspace (negócio criado, etapa mudada, contato removido) aparece aqui automaticamente."
+        ) %>
   <% end %>
 </div>

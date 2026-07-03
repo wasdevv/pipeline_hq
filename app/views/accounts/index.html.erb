@@ -1,29 +1,21 @@
-<% content_for :title, "Accounts" %>
+<% content_for :title, "Empresas — PipelineHQ" %>
 
-<div class="w-full">
-  <% if notice.present? %>
-    <p class="py-2 px-3 bg-green-50 mb-5 text-green-500 font-medium rounded-md inline-block" id="notice"><%= notice %></p>
-  <% end %>
-
-  <div class="flex justify-between items-center">
-    <h1 class="font-bold text-4xl">Accounts</h1>
-    <%= link_to "New account", new_account_path, class: "rounded-md px-3.5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white block font-medium" %>
-  </div>
-
-  <div id="accounts" class="min-w-full divide-y divide-gray-200 space-y-5">
-    <% if @accounts.any? %>
-      <% @accounts.each do |account| %>
-        <div class="flex flex-col sm:flex-row justify-between items-center pb-5 sm:pb-0">
-          <%= render account %>
-          <div class="w-full sm:w-auto flex flex-col sm:flex-row space-x-2 space-y-2">
-            <%= link_to "Show", account, class: "w-full sm:w-auto text-center rounded-md px-3.5 py-2.5 bg-gray-100 hover:bg-gray-50 inline-block font-medium" %>
-            <%= link_to "Edit", edit_account_path(account), class: "w-full sm:w-auto text-center rounded-md px-3.5 py-2.5 bg-gray-100 hover:bg-gray-50 inline-block font-medium" %>
-            <%= button_to "Destroy", account, method: :delete, class: "w-full sm:w-auto rounded-md px-3.5 py-2.5 text-white bg-red-600 hover:bg-red-500 font-medium cursor-pointer", data: { turbo_confirm: "Are you sure?" } %>
-          </div>
-        </div>
-      <% end %>
-    <% else %>
-      <p class="text-center my-10">No accounts found.</p>
-    <% end %>
-  </div>
-</div>
+<%= render CrudIndexComponent.new(
+      title: "Empresas",
+      subtitle: "Empresas que você vende ou já vendeu pra elas.",
+      records: @accounts,
+      columns: [
+        { label: "Nome",  value: ->(a) { a.name } },
+        { label: "Setor", value: ->(a) { a.industry.presence || "—" } },
+        { label: "Site",  value: ->(a) { a.website.present? ? link_to(a.website, a.website, target: "_blank", rel: "noopener", class: "text-indigo-600 hover:underline dark:text-indigo-400") : "—" } }
+      ],
+      new_path: new_account_path,
+      new_label: "Nova empresa",
+      show_path: ->(a) { account_path(a) },
+      edit_path: ->(a) { edit_account_path(a) },
+      delete_confirm: "Apagar esta empresa?",
+      empty_icon: :building,
+      empty_title: "Nenhuma empresa ainda",
+      empty_description: "Cadastre as empresas pra quem você vende. A primeira empresa é o começo do seu funil.",
+      empty_action_label: "Cadastrar primeira empresa"
+    ) %>

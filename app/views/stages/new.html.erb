@@ -1,9 +1,12 @@
-<% content_for :title, "New stage" %>
+<% content_for :title, "Nova etapa — PipelineHQ" %>
 
-<div class="md:w-2/3 w-full">
-  <h1 class="font-bold text-4xl">New stage</h1>
+<div class="mx-auto max-w-2xl space-y-6 p-6">
+  <%= render PageHeaderComponent.new(
+        title: "Nova etapa do funil",
+        subtitle: "Defina mais um estágio que um negócio pode passar antes de fechar."
+      ) %>
 
-  <%= render "form", stage: @stage %>
-
-  <%= link_to "Back to stages", stages_path, class: "w-full sm:w-auto text-center mt-2 sm:mt-0 sm:ml-2 rounded-md px-3.5 py-2.5 bg-gray-100 hover:bg-gray-50 inline-block font-medium" %>
+  <div class="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
+    <%= render "form", stage: @stage %>
+  </div>
 </div>

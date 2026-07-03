@@ -1,14 +1,10 @@
 <% content_for :title, "Membros — #{current_workspace.name} — PipelineHQ" %>
 
 <div class="mx-auto max-w-3xl space-y-6 p-6">
-  <header class="flex flex-wrap items-start justify-between gap-4">
-    <div>
-      <h1 class="text-2xl font-semibold tracking-tight">Membros</h1>
-      <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-        <%= current_workspace.name %>
-      </p>
-    </div>
-  </header>
+  <%= render PageHeaderComponent.new(
+        title: "Membros",
+        subtitle: "Pessoas com acesso ao workspace #{current_workspace.name}."
+      ) %>
 
   <nav class="border-b border-zinc-200 dark:border-zinc-800" aria-label="Abas do workspace">
     <ul class="-mb-px flex gap-4 text-sm font-medium" role="tablist">

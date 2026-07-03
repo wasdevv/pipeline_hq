@@ -1,9 +1,8 @@
-<%= form_with(model: stage, class: "contents") do |form| %>
+<%= form_with(model: stage, class: "space-y-5") do |form| %>
   <% if stage.errors.any? %>
-    <div id="error_explanation" class="bg-red-50 text-red-500 px-3 py-2 font-medium rounded-md mt-3">
-      <h2><%= pluralize(stage.errors.count, "error") %> prohibited this stage from being saved:</h2>
-
-      <ul class="list-disc ml-6">
+    <div role="alert" class="rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-900 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-100">
+      <p class="font-medium"><%= pluralize(stage.errors.count, "erro") %> impediram salvar:</p>
+      <ul class="mt-1 list-disc pl-5">
         <% stage.errors.each do |error| %>
           <li><%= error.full_message %></li>
         <% end %>
@@ -11,22 +10,20 @@
     </div>
   <% end %>
 
-  <div class="my-5">
-    <%= form.label :name %>
-    <%= form.text_field :name, class: ["block shadow-sm rounded-md border px-3 py-2 mt-2 w-full", {"border-gray-400 focus:outline-blue-600": stage.errors[:name].none?, "border-red-400 focus:outline-red-600": stage.errors[:name].any?}] %>
+  <%= render FormFieldComponent.new(form: form, name: :name, label: "Nome da etapa", type: :text, required: true, hint: "Ex.: Prospect, Demo agendada, Proposta enviada.") %>
+  <%= render FormFieldComponent.new(form: form, name: :position, label: "Ordem", type: :number, hint: "Em que posição essa etapa aparece no funil (1 = primeira).") %>
+
+  <div>
+    <%= form.label :color, "Cor", class: "block text-sm font-medium text-zinc-700 dark:text-zinc-300" %>
+    <div class="mt-1 flex items-center gap-2">
+      <%= form.color_field :color, class: "h-10 w-14 cursor-pointer rounded-md border border-zinc-300 bg-white p-1 dark:border-zinc-700 dark:bg-zinc-900" %>
+      <%= form.text_field :color, class: "w-full rounded-md border border-zinc-300 bg-white px-3 py-2 font-mono text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100", placeholder: "#4f46e5" %>
+    </div>
+    <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">Pra identificar visualmente a etapa no kanban.</p>
   </div>
 
-  <div class="my-5">
-    <%= form.label :position %>
-    <%= form.number_field :position, class: ["block shadow-sm rounded-md border px-3 py-2 mt-2 w-full", {"border-gray-400 focus:outline-blue-600": stage.errors[:position].none?, "border-red-400 focus:outline-red-600": stage.errors[:position].any?}] %>
-  </div>
-
-  <div class="my-5">
-    <%= form.label :color %>
-    <%= form.text_field :color, class: ["block shadow-sm rounded-md border px-3 py-2 mt-2 w-full", {"border-gray-400 focus:outline-blue-600": stage.errors[:color].none?, "border-red-400 focus:outline-red-600": stage.errors[:color].any?}] %>
-  </div>
-
-  <div class="inline">
-    <%= form.submit class: "w-full sm:w-auto rounded-md px-3.5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white inline-block font-medium cursor-pointer" %>
+  <div class="flex items-center justify-end gap-2 border-t border-zinc-200 pt-4 dark:border-zinc-800">
+    <%= link_to "Cancelar", stages_path, class: "rounded-md px-4 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800" %>
+    <%= form.submit (stage.persisted? ? "Salvar alterações" : "Criar etapa"), class: ButtonPrimaryComponent::CLASSES + " sm:w-auto" %>
   </div>
 <% end %>
