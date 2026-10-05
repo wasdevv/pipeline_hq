@@ -1,0 +1,68 @@
+<section class="flex h-full min-h-0 flex-col bg-white dark:bg-zinc-950" aria-label="<%= t("chat.panel.title") %>">
+  <header class="flex items-start justify-between gap-3 border-b border-zinc-200 px-4 py-3 dark:border-zinc-800">
+    <div>
+      <h2 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100"><%= t("chat.panel.title") %></h2>
+      <p class="text-xs text-zinc-500 dark:text-zinc-400"><%= t("chat.panel.subtitle") %></p>
+    </div>
+    <div class="flex shrink-0 items-center gap-1">
+      <% if @chat_session %>
+        <%= button_to t("chat.panel.new_session"), helpers.chat_sessions_path,
+              form: { data: { turbo_frame: "chat_panel" } },
+              class: "rounded-md px-2 py-1 text-xs font-medium text-indigo-600 hover:bg-indigo-50 dark:text-indigo-400 dark:hover:bg-zinc-900" %>
+      <% end %>
+      <button type="button" popovertarget="chat-panel" popovertargetaction="hide"
+              aria-label="<%= t("chat.panel.close") %>"
+              class="inline-flex size-8 items-center justify-center rounded-full text-zinc-500 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800">
+        <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <% if @chat_session %>
+    <%= helpers.turbo_stream_from @chat_session.stream_name %>
+
+    <div class="flex-1 overflow-y-auto bg-zinc-50 px-4 py-4 dark:bg-zinc-900/50" data-chat-scroll>
+      <% if messages.empty? %>
+        <p class="text-center text-xs text-zinc-500 dark:text-zinc-400"><%= t("chat.panel.empty") %></p>
+      <% end %>
+      <ul id="<%= dom_id(@chat_session, :messages) %>" class="space-y-3" role="log" aria-live="polite" aria-label="<%= t("chat.panel.title") %>">
+        <% messages.each do |message| %>
+          <%= render partial: "chat_messages/message", locals: { message: message } %>
+        <% end %>
+        <% if replying? %>
+          <%= render partial: "chat_messages/thinking", locals: { chat_session: @chat_session } %>
+        <% end %>
+      </ul>
+    </div>
+
+    <footer class="border-t border-zinc-200 p-3 dark:border-zinc-800">
+      <p id="chat_error" class="mb-2 text-xs text-rose-600 empty:hidden dark:text-rose-400" role="alert"></p>
+      <%= form_with url: helpers.chat_session_chat_messages_path(@chat_session), scope: :chat_message,
+                    data: { controller: "chat", chat_target: "form",
+                            action: "keydown->chat#keydown turbo:submit-start->chat#lock turbo:submit-end->chat#unlock" } do |form| %>
+        <%= form.label :text, t("chat.panel.input_label"), class: "sr-only" %>
+        <div class="flex items-end gap-2 rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2 focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500 dark:border-zinc-700 dark:bg-zinc-900">
+          <%= form.text_area :text, rows: 2, required: true, maxlength: ChatMessage::TEXT_MAX,
+                placeholder: t("chat.panel.placeholder"),
+                data: { chat_target: "input" },
+                class: "flex-1 resize-none bg-transparent py-1 text-base text-zinc-900 placeholder-zinc-400 focus:outline-none sm:text-sm dark:text-zinc-100 dark:placeholder-zinc-600" %>
+          <%= form.button type: :submit, data: { chat_target: "submit" },
+                class: "inline-flex size-8 shrink-0 items-center justify-center rounded-lg bg-indigo-600 text-white transition hover:bg-indigo-500 disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-500" do %>
+            <span class="sr-only"><%= t("chat.panel.send") %></span>
+            <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="m22 2-7 20-4-9-9-4 20-7z"/><path d="M22 2 11 13"/>
+            </svg>
+          <% end %>
+        </div>
+        <p class="mt-1.5 px-1 text-xs text-zinc-400 dark:text-zinc-600"><%= t("chat.panel.hint") %></p>
+      <% end %>
+    </footer>
+  <% else %>
+    <div class="flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center">
+      <p class="text-sm text-zinc-500 dark:text-zinc-400"><%= t("chat.panel.empty") %></p>
+      <%= button_to t("chat.panel.new_session"), helpers.chat_sessions_path,
+            form: { data: { turbo_frame: "chat_panel" } },
+            class: "rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500" %>
+    </div>
+  <% end %>
+</section>

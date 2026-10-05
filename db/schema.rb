@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_27_011545) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_05_120001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -54,6 +54,31 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_27_011545) do
     t.index ["metadata"], name: "index_auth_events_on_metadata", using: :gin
     t.index ["user_id", "created_at"], name: "index_auth_events_on_user_id_and_created_at"
     t.index ["user_id"], name: "index_auth_events_on_user_id"
+  end
+
+  create_table "chat_messages", force: :cascade do |t|
+    t.bigint "chat_session_id", null: false
+    t.jsonb "content", default: [], null: false
+    t.datetime "created_at", null: false
+    t.integer "role", null: false
+    t.integer "tokens_in", default: 0, null: false
+    t.integer "tokens_out", default: 0, null: false
+    t.bigint "workspace_id", null: false
+    t.index ["chat_session_id", "created_at"], name: "idx_chat_messages_session_created_at"
+    t.index ["workspace_id", "created_at"], name: "idx_chat_messages_workspace_created_at"
+    t.check_constraint "jsonb_typeof(content) = 'array'::text", name: "chat_messages_content_array_check"
+    t.check_constraint "role = ANY (ARRAY[0, 1, 2])", name: "chat_messages_role_check"
+    t.check_constraint "tokens_in >= 0 AND tokens_out >= 0", name: "chat_messages_tokens_check"
+  end
+
+  create_table "chat_sessions", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "reply_started_at"
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.bigint "workspace_id", null: false
+    t.index ["user_id"], name: "index_chat_sessions_on_user_id"
+    t.index ["workspace_id", "user_id", "updated_at"], name: "idx_chat_sessions_workspace_user_updated_at"
   end
 
   create_table "contacts", force: :cascade do |t|
@@ -223,6 +248,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_27_011545) do
   add_foreign_key "activities", "deals"
   add_foreign_key "activities", "workspaces", on_delete: :cascade
   add_foreign_key "auth_events", "users"
+  add_foreign_key "chat_messages", "chat_sessions", on_delete: :cascade
+  add_foreign_key "chat_messages", "workspaces", on_delete: :cascade
+  add_foreign_key "chat_sessions", "users", on_delete: :cascade
+  add_foreign_key "chat_sessions", "workspaces", on_delete: :cascade
   add_foreign_key "contacts", "accounts"
   add_foreign_key "contacts", "workspaces", on_delete: :cascade
   add_foreign_key "conversation_participants", "conversations", on_delete: :cascade

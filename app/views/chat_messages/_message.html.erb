@@ -1,0 +1,7 @@
+<% mine = message.user? %>
+<li class="flex <%= mine ? "justify-end" : "justify-start" %>">
+  <div class="max-w-[85%] rounded-2xl px-3 py-2 text-sm <%= mine ? "bg-indigo-600 text-white" : "bg-white text-zinc-800 ring-1 ring-zinc-200 dark:bg-zinc-800 dark:text-zinc-100 dark:ring-zinc-700" %>">
+    <span class="sr-only"><%= t(mine ? "chat.panel.you" : "chat.panel.assistant") %>:</span>
+    <%= simple_format(h(message.text), class: "break-words [&:not(:last-child)]:mb-2") %>
+  </div>
+</li>

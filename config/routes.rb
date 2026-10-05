@@ -46,6 +46,11 @@ Rails.application.routes.draw do
     resources :messages, only: :create
   end
 
+  # Assistente de CRM (somente leitura)
+  resources :chat_sessions, only: %i[index show create] do
+    resources :chat_messages, only: :create
+  end
+
   # Preferências de dashboard
   resource :dashboard_preferences, only: %i[edit update]
 

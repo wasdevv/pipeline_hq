@@ -28,6 +28,9 @@ gem "pwned"              # HaveIBeenPwned breach check
 gem "rotp"               # TOTP (Google Authenticator) 2FA
 gem "rqrcode"            # QR code para enroll do 2FA
 
+# === AI ===
+gem "anthropic", "~> 1.76"   # SDK oficial da API do Claude (chatbot de CRM)
+
 # === Authorization ===
 gem "pundit", "~> 2.4"
 
