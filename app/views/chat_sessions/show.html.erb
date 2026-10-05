@@ -1,0 +1,3 @@
+<%= turbo_frame_tag "chat_panel", class: "block h-full" do %>
+  <%= render ChatPanelComponent.new(chat_session: @chat_session) %>
+<% end %>

@@ -34,6 +34,12 @@
   <body class="min-h-full bg-white text-zinc-900 antialiased dark:bg-zinc-950 dark:text-zinc-100">
     <% if authenticated? && current_user %>
       <%= render TopbarComponent.new(current_user: current_user, current_workspace: current_workspace, unread_messages_count: unread_messages_count) %>
+      <% if current_workspace %>
+        <aside id="chat-panel" popover
+               class="fixed inset-y-0 right-0 left-auto m-0 h-dvh max-h-none w-full max-w-md border-0 border-l border-zinc-200 bg-white p-0 shadow-xl dark:border-zinc-800 dark:bg-zinc-950">
+          <%= turbo_frame_tag "chat_panel", src: chat_sessions_path, loading: :lazy, class: "block h-full" %>
+        </aside>
+      <% end %>
     <% else %>
       <div class="fixed right-4 top-4 z-50" data-controller="theme">
         <button type="button" data-action="theme#toggle"

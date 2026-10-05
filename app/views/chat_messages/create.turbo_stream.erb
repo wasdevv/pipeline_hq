@@ -1,0 +1,5 @@
+<%= turbo_stream.update "chat_error", "" %>
+<%= turbo_stream.append dom_id(@chat_session, :messages) do %>
+  <%= render "chat_messages/message", message: @message %>
+  <%= render "chat_messages/thinking", chat_session: @chat_session %>
+<% end %>

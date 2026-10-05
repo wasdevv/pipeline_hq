@@ -41,3 +41,4 @@ pt-BR:
       activity_destroyed: "Atividade removida"
       conversation_created: "Conversa iniciada"
       direct_message_sent: "Mensagem enviada"
+      chat_message_sent: "Pergunta ao assistente"

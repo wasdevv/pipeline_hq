@@ -30,6 +30,16 @@
         <% end %>
       </div>
 
+      <% if @current_workspace %>
+        <button type="button" popovertarget="chat-panel"
+                aria-label="<%= t("chat.panel.open") %>"
+                class="inline-flex size-9 items-center justify-center rounded-full border border-zinc-200 bg-white/80 text-zinc-700 shadow-sm backdrop-blur transition hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-500 dark:border-zinc-800 dark:bg-zinc-900/80 dark:text-zinc-300 dark:hover:bg-zinc-900">
+          <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 17v4M17 19h4"/>
+          </svg>
+        </button>
+      <% end %>
+
       <div data-controller="theme">
         <button type="button" data-action="theme#toggle"
                 aria-label="Alternar tema"
